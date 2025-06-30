@@ -23,11 +23,20 @@
             </svg>
           </button>
           <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-            <li><a @click="changeBlockType('paragraph')">Paragraph</a></li>
-            <li><a @click="changeBlockType('heading')">Heading</a></li>
-            <li><a @click="changeBlockType('list')">List</a></li>
-            <li><a @click="changeBlockType('code')">Code</a></li>
-            <li><a @click="changeBlockType('quote')">Quote</a></li>
+            <li><a @click="convertToType('paragraph')">Paragraph</a></li>
+            <li><a @click="convertToType('heading')">Heading</a></li>
+            <li><a @click="convertToType('list')">List</a></li>
+            <li><a @click="convertToType('code')">Code</a></li>
+            <li><a @click="convertToType('quote')">Quote</a></li>
+            <li class="divider"></li>
+            <li>
+              <a @click="addToWhiteboard" :class="{ 'text-success': isOnWhiteboard }">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                </svg>
+                {{ isOnWhiteboard ? 'On Whiteboard' : 'Add to Whiteboard' }}
+              </a>
+            </li>
             <li class="divider"></li>
             <li><a @click="duplicateBlock">Duplicate</a></li>
             <li><a @click="deleteBlock" class="text-error">Delete</a></li>
@@ -189,17 +198,18 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
-import type { Block, BlockType } from '@/types'
+import { useUnifiedIntegration } from '@/composables/useUnifiedIntegration'
+import type { UnifiedBlock, UnifiedBlockType } from '@/types/unified'
 
 interface Props {
-  block: Block
+  block: UnifiedBlock
   index: number
 }
 
 interface Emits {
-  (e: 'update', blockId: string, updates: Partial<Block>): void
+  (e: 'update', blockId: string, updates: Partial<UnifiedBlock>): void
   (e: 'delete', blockId: string): void
-  (e: 'add-after', index: number, type?: BlockType): void
+  (e: 'add-after', index: number, type?: UnifiedBlockType): void
   (e: 'move-up', index: number): void
   (e: 'move-down', index: number): void
 }
@@ -207,9 +217,13 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const unifiedIntegration = useUnifiedIntegration()
+
 // State
 const isSelected = ref(false)
 const textareaRef = ref<HTMLTextAreaElement>()
+const showContextMenu = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
 
 // Reactive properties
 const content = ref(props.block.content)
@@ -314,6 +328,32 @@ function startDrag(event: MouseEvent) {
   // TODO: Implement drag and drop functionality
   console.log('Start drag', event)
 }
+
+// Context menu methods
+function showContextMenuAt(event: MouseEvent) {
+  event.preventDefault()
+  contextMenuPosition.value = { x: event.clientX, y: event.clientY }
+  showContextMenu.value = true
+}
+
+function hideContextMenu() {
+  showContextMenu.value = false
+}
+
+function addToWhiteboard() {
+  unifiedIntegration.addDocumentBlockToWhiteboard(props.block.id)
+  hideContextMenu()
+}
+
+function convertToType(newType: UnifiedBlockType) {
+  emit('update', props.block.id, { type: newType })
+  hideContextMenu()
+}
+
+// Check if block is already on whiteboard
+const isOnWhiteboard = computed(() => {
+  return unifiedIntegration.isOnAnyCanvas(props.block.id)
+})
 
 onMounted(() => {
   autoResize()

@@ -1,4 +1,13 @@
 import { invoke } from '@tauri-apps/api/core'
+import type {
+  UnifiedWorkspace,
+  UnifiedBlock,
+  DocumentContainer,
+  CanvasContainer,
+  BlockQuery,
+  QueryResult,
+  UnifiedError
+} from '@/types/unified'
 
 export interface FileSystemError {
   code: string
@@ -315,5 +324,129 @@ export async function loadAllCanvases(): Promise<any[]> {
   } catch (error) {
     console.error('Failed to load all canvases:', error)
     return []
+  }
+}
+
+// ============================================================================
+// UNIFIED SYSTEM API
+// ============================================================================
+
+/**
+ * Load a unified workspace
+ */
+export async function loadWorkspace(workspaceId: string): Promise<UnifiedWorkspace> {
+  try {
+    return await invoke<UnifiedWorkspace>('load_workspace', { workspaceId })
+  } catch (error) {
+    console.error('Failed to load workspace:', error)
+    throw error
+  }
+}
+
+/**
+ * Save a unified workspace
+ */
+export async function saveWorkspace(workspace: UnifiedWorkspace): Promise<void> {
+  try {
+    await invoke<void>('save_workspace', { workspace })
+  } catch (error) {
+    console.error('Failed to save workspace:', error)
+    throw error
+  }
+}
+
+/**
+ * Save a unified block
+ */
+export async function saveBlock(workspaceId: string, block: UnifiedBlock): Promise<void> {
+  try {
+    await invoke<void>('save_block', { workspaceId, block })
+  } catch (error) {
+    console.error('Failed to save block:', error)
+    throw error
+  }
+}
+
+/**
+ * Get a unified block
+ */
+export async function getBlock(workspaceId: string, blockId: string): Promise<UnifiedBlock | null> {
+  try {
+    return await invoke<UnifiedBlock | null>('get_block', { workspaceId, blockId })
+  } catch (error) {
+    console.error('Failed to get block:', error)
+    throw error
+  }
+}
+
+/**
+ * Delete a unified block
+ */
+export async function deleteBlock(workspaceId: string, blockId: string): Promise<void> {
+  try {
+    await invoke<void>('delete_block', { workspaceId, blockId })
+  } catch (error) {
+    console.error('Failed to delete block:', error)
+    throw error
+  }
+}
+
+/**
+ * Query unified blocks
+ */
+export async function queryBlocks(workspaceId: string, query: BlockQuery): Promise<QueryResult> {
+  try {
+    return await invoke<QueryResult>('query_blocks', { workspaceId, query })
+  } catch (error) {
+    console.error('Failed to query blocks:', error)
+    throw error
+  }
+}
+
+/**
+ * Save a document container
+ */
+export async function saveDocumentContainer(workspaceId: string, document: DocumentContainer): Promise<void> {
+  try {
+    await invoke<void>('save_document', { workspaceId, document })
+  } catch (error) {
+    console.error('Failed to save document:', error)
+    throw error
+  }
+}
+
+/**
+ * Get a document container
+ */
+export async function getDocumentContainer(workspaceId: string, documentId: string): Promise<DocumentContainer | null> {
+  try {
+    return await invoke<DocumentContainer | null>('get_document', { workspaceId, documentId })
+  } catch (error) {
+    console.error('Failed to get document:', error)
+    throw error
+  }
+}
+
+/**
+ * Save a canvas container
+ */
+export async function saveCanvasContainer(workspaceId: string, canvas: CanvasContainer): Promise<void> {
+  try {
+    await invoke<void>('save_canvas', { workspaceId, canvas })
+  } catch (error) {
+    console.error('Failed to save canvas:', error)
+    throw error
+  }
+}
+
+/**
+ * Get a canvas container
+ */
+export async function getCanvasContainer(workspaceId: string, canvasId: string): Promise<CanvasContainer | null> {
+  try {
+    return await invoke<CanvasContainer | null>('get_canvas', { workspaceId, canvasId })
+  } catch (error) {
+    console.error('Failed to get canvas:', error)
+    throw error
   }
 }

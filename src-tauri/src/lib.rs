@@ -3,6 +3,14 @@ use std::fs;
 use std::path::Path;
 use tauri::Manager;
 
+mod unified;
+mod storage;
+
+use unified::*;
+use storage::UnifiedStorage;
+use std::sync::Mutex;
+use tauri::State;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Document {
     pub id: String,
@@ -126,6 +134,70 @@ async fn get_app_data_dir(app: tauri::AppHandle) -> Result<String, FileSystemErr
     }
 }
 
+// ============================================================================
+// UNIFIED SYSTEM COMMANDS
+// ============================================================================
+
+#[tauri::command]
+async fn load_workspace(app_handle: tauri::AppHandle, workspace_id: String) -> Result<UnifiedWorkspace, UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.load_workspace(&workspace_id).await
+}
+
+#[tauri::command]
+async fn save_workspace(app_handle: tauri::AppHandle, workspace: UnifiedWorkspace) -> Result<(), UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.save_workspace(&workspace).await
+}
+
+#[tauri::command]
+async fn save_block(app_handle: tauri::AppHandle, workspace_id: String, block: UnifiedBlock) -> Result<(), UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.save_block(&workspace_id, &block).await
+}
+
+#[tauri::command]
+async fn get_block(app_handle: tauri::AppHandle, workspace_id: String, block_id: String) -> Result<Option<UnifiedBlock>, UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.get_block(&workspace_id, &block_id).await
+}
+
+#[tauri::command]
+async fn delete_block(app_handle: tauri::AppHandle, workspace_id: String, block_id: String) -> Result<(), UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.delete_block(&workspace_id, &block_id).await
+}
+
+#[tauri::command]
+async fn query_blocks(app_handle: tauri::AppHandle, workspace_id: String, query: BlockQuery) -> Result<QueryResult, UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.query_blocks(&workspace_id, &query).await
+}
+
+#[tauri::command]
+async fn save_document(app_handle: tauri::AppHandle, workspace_id: String, document: DocumentContainer) -> Result<(), UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.save_document(&workspace_id, &document).await
+}
+
+#[tauri::command]
+async fn get_document(app_handle: tauri::AppHandle, workspace_id: String, document_id: String) -> Result<Option<DocumentContainer>, UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.get_document(&workspace_id, &document_id).await
+}
+
+#[tauri::command]
+async fn save_canvas(app_handle: tauri::AppHandle, workspace_id: String, canvas: CanvasContainer) -> Result<(), UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.save_canvas(&workspace_id, &canvas).await
+}
+
+#[tauri::command]
+async fn get_canvas(app_handle: tauri::AppHandle, workspace_id: String, canvas_id: String) -> Result<Option<CanvasContainer>, UnifiedError> {
+    let storage = UnifiedStorage::new(&app_handle)?;
+    storage.get_canvas(&workspace_id, &canvas_id).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -138,7 +210,18 @@ pub fn run() {
             list_files,
             file_exists,
             create_directory,
-            get_app_data_dir
+            get_app_data_dir,
+            // Unified system commands
+            load_workspace,
+            save_workspace,
+            save_block,
+            get_block,
+            delete_block,
+            query_blocks,
+            save_document,
+            get_document,
+            save_canvas,
+            get_canvas
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -111,8 +111,49 @@
         <WhiteboardCanvas v-else-if="appStore.currentView === 'whiteboard'" />
 
         <!-- Integration Demo View -->
-        <div v-else-if="appStore.currentView === 'integration'" class="h-full overflow-y-auto p-6">
-          <IntegrationDemo />
+        <div v-else-if="appStore.currentView === 'integration'" class="h-full overflow-y-auto">
+          <CrossViewOperations />
+          <div class="p-6">
+            <div class="demo-header bg-gradient-to-r from-primary to-secondary text-primary-content p-6 rounded-lg mb-6">
+              <h2 class="text-2xl font-bold mb-2">Unified Integration Demo</h2>
+              <p class="text-primary-content/80">
+                Experience seamless integration between SiYuan's block-based notes and Heptabase's whiteboard functionality.
+                All content exists as unified blocks that can appear in both views simultaneously.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="card bg-base-200">
+                <div class="card-body">
+                  <h4 class="card-title text-sm">🔗 Unified System</h4>
+                  <p class="text-sm text-base-content/60">
+                    All content exists as unified blocks that can appear in both document and whiteboard views.
+                    Changes made in one view automatically sync to the other.
+                  </p>
+                </div>
+              </div>
+
+              <div class="card bg-base-200">
+                <div class="card-body">
+                  <h4 class="card-title text-sm">⚡ Key Features</h4>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <div class="badge badge-success">✓</div>
+                      <span class="text-sm">Real-time synchronization</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="badge badge-success">✓</div>
+                      <span class="text-sm">Drag & drop between views</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <div class="badge badge-success">✓</div>
+                      <span class="text-sm">Cross-view operations</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Default/Loading View -->
@@ -163,7 +204,7 @@ import DocumentList from '@/components/filesystem/DocumentList.vue'
 import DocumentEditor from '@/components/filesystem/DocumentEditor.vue'
 import CanvasList from '@/components/whiteboard/CanvasList.vue'
 import WhiteboardCanvas from '@/components/whiteboard/WhiteboardCanvas.vue'
-import IntegrationDemo from '@/components/shared/IntegrationDemo.vue'
+import CrossViewOperations from '@/components/shared/CrossViewOperations.vue'
 
 const appStore = useAppStore()
 const syncStore = useSyncStore()

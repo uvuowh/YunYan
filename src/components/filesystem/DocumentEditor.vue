@@ -58,6 +58,43 @@
         </button>
       </div>
 
+      <div class="toolbar-group">
+        <div class="dropdown dropdown-end">
+          <label tabindex="0" class="btn btn-sm btn-ghost">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+            Whiteboard
+          </label>
+          <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+            <li>
+              <a @click="addSelectedToWhiteboard">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Selected to Whiteboard
+              </a>
+            </li>
+            <li>
+              <a @click="addAllToWhiteboard">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Add All Blocks to Whiteboard
+              </a>
+            </li>
+            <li>
+              <a @click="unifiedIntegration.autoLayoutCanvas(unifiedStore.currentCanvasId || '')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Auto-layout on Canvas
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       <div class="toolbar-group ml-auto">
         <span class="text-sm text-base-content/60">
           {{ wordCount }} words • {{ readingTime }} min read
@@ -109,26 +146,33 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useFileSystemStore } from '@/stores/filesystem'
+import { useDocumentView } from '@/composables/useDocumentView'
+import { useUnifiedIntegration } from '@/composables/useUnifiedIntegration'
+import { useUnifiedStore } from '@/stores/unified'
 import { useAppStore } from '@/stores/app'
-import type { Block, BlockType } from '@/types'
+import type { UnifiedBlock, UnifiedBlockType } from '@/types/unified'
 import { parseMarkdownToBlocks, blocksToMarkdown, renderMarkdown, getWordCount, calculateReadingTime } from '@/utils/markdown'
 import BlockEditor from './BlockEditor.vue'
 
-const fileSystemStore = useFileSystemStore()
+const documentView = useDocumentView()
+const unifiedIntegration = useUnifiedIntegration()
+const unifiedStore = useUnifiedStore()
 const appStore = useAppStore()
 
 // State
-const showPreview = ref(false)
 const hasChanges = ref(false)
 
-// Computed
-const currentDocument = computed(() => fileSystemStore.currentDocument)
+// Computed - using unified document view
+const currentDocument = computed(() => documentView.currentDocument)
 const documentTitle = ref('')
-const blocks = ref<Block[]>([])
+const blocks = computed(() => documentView.documentBlocks)
+const showPreview = computed({
+  get: () => documentView.showPreview.value,
+  set: (value) => documentView.showPreview.value = value
+})
 
-const wordCount = computed(() => getWordCount(blocks.value))
-const readingTime = computed(() => calculateReadingTime(wordCount.value))
+const wordCount = computed(() => documentView.documentStats.value.wordCount)
+const readingTime = computed(() => documentView.documentStats.value.readingTime)
 
 const renderedContent = computed(() => {
   if (!currentDocument.value) return ''
@@ -162,47 +206,137 @@ function togglePreview() {
   showPreview.value = !showPreview.value
 }
 
-function addBlock(type: BlockType) {
-  const newBlock = fileSystemStore.createBlock(type)
-  blocks.value.push(newBlock)
-  markAsChanged()
-}
-
-function addBlockAfter(index: number, type: BlockType = 'paragraph') {
-  const newBlock = fileSystemStore.createBlock(type)
-  blocks.value.splice(index + 1, 0, newBlock)
-  markAsChanged()
-}
-
-function updateBlock(blockId: string, updates: Partial<Block>) {
-  const index = blocks.value.findIndex(b => b.id === blockId)
-  if (index > -1) {
-    blocks.value[index] = { ...blocks.value[index], ...updates }
+function addBlock(type: UnifiedBlockType) {
+  const result = documentView.createBlock(type)
+  if (result.success) {
     markAsChanged()
   }
+}
+
+function addBlockAfter(index: number, type: UnifiedBlockType = 'paragraph') {
+  const targetBlock = blocks.value[index]
+  if (targetBlock) {
+    const result = documentView.createBlockAfter(targetBlock.id, type)
+    if (result.success) {
+      markAsChanged()
+    }
+  }
+}
+
+function updateBlock(blockId: string, updates: Partial<UnifiedBlock>) {
+  // For content updates, use the document view method
+  if (updates.content !== undefined) {
+    const result = documentView.updateBlockContent(blockId, updates.content)
+    if (result.success) {
+      markAsChanged()
+    }
+  }
+
+  // For other updates, use the unified store directly
+  // This ensures all properties are properly handled
+  // The unified store will automatically sync to all views
 }
 
 function deleteBlock(blockId: string) {
-  const index = blocks.value.findIndex(b => b.id === blockId)
-  if (index > -1) {
-    blocks.value.splice(index, 1)
-    markAsChanged()
-  }
+  documentView.selectBlock(blockId)
+  documentView.deleteSelectedBlocks()
+  markAsChanged()
 }
 
 function moveBlockUp(index: number) {
   if (index > 0) {
-    const block = blocks.value.splice(index, 1)[0]
-    blocks.value.splice(index - 1, 0, block)
-    markAsChanged()
+    const currentBlock = blocks.value[index]
+    const targetBlock = blocks.value[index - 1]
+    if (currentBlock && targetBlock) {
+      // Move block to position before the target block
+      documentView.moveBlock(currentBlock.id, targetBlock.parentId, targetBlock.position)
+      markAsChanged()
+    }
   }
 }
 
 function moveBlockDown(index: number) {
   if (index < blocks.value.length - 1) {
-    const block = blocks.value.splice(index, 1)[0]
-    blocks.value.splice(index + 1, 0, block)
+    const currentBlock = blocks.value[index]
+    const targetBlock = blocks.value[index + 1]
+    if (currentBlock && targetBlock) {
+      // Move block to position after the target block
+      documentView.moveBlock(currentBlock.id, targetBlock.parentId, targetBlock.position + 1)
+      markAsChanged()
+    }
+  }
+}
+
+// New unified feature: Add block to whiteboard
+function addBlockToWhiteboard(blockId: string) {
+  const result = unifiedIntegration.addDocumentBlockToWhiteboard(blockId)
+  if (result) {
+    appStore.addError(appStore.createError(
+      'WHITEBOARD_ADD_SUCCESS',
+      'Block added to whiteboard',
+      'integration'
+    ))
+  }
+}
+
+// New unified feature: Convert block type
+function convertBlockType(blockId: string, newType: UnifiedBlockType) {
+  const result = documentView.convertBlockType(blockId, newType)
+  if (result.success) {
     markAsChanged()
+  }
+}
+
+// Whiteboard integration methods
+function addSelectedToWhiteboard() {
+  const selectedBlocks = documentView.selectedBlockIds.value
+  if (selectedBlocks.length === 0) {
+    appStore.addError(appStore.createError(
+      'NO_SELECTION',
+      'Please select blocks to add to whiteboard',
+      'integration'
+    ))
+    return
+  }
+
+  let successCount = 0
+  for (const blockId of selectedBlocks) {
+    const result = unifiedIntegration.addDocumentBlockToWhiteboard(blockId)
+    if (result) successCount++
+  }
+
+  if (successCount > 0) {
+    appStore.addError(appStore.createError(
+      'WHITEBOARD_ADD_SUCCESS',
+      `${successCount} block(s) added to whiteboard`,
+      'integration'
+    ))
+  }
+}
+
+function addAllToWhiteboard() {
+  const allBlocks = blocks.value
+  if (allBlocks.length === 0) {
+    appStore.addError(appStore.createError(
+      'NO_BLOCKS',
+      'No blocks to add to whiteboard',
+      'integration'
+    ))
+    return
+  }
+
+  let successCount = 0
+  for (const block of allBlocks) {
+    const result = unifiedIntegration.addDocumentBlockToWhiteboard(block.id)
+    if (result) successCount++
+  }
+
+  if (successCount > 0) {
+    appStore.addError(appStore.createError(
+      'WHITEBOARD_ADD_SUCCESS',
+      `${successCount} block(s) added to whiteboard`,
+      'integration'
+    ))
   }
 }
 
@@ -211,17 +345,11 @@ async function saveDocument() {
 
   try {
     appStore.setLoading(true)
-    
-    // Update document with current content
-    const content = blocksToMarkdown(blocks.value)
-    fileSystemStore.updateDocument(currentDocument.value.id, {
-      title: documentTitle.value,
-      content,
-      blocks: blocks.value
-    })
 
+    // The unified store automatically handles persistence
+    // We just need to mark as saved
     hasChanges.value = false
-    
+
     // Show success message
     appStore.addError(appStore.createError(
       'SAVE_SUCCESS',
@@ -248,7 +376,7 @@ watch([documentTitle, blocks], () => {
   if (autoSaveTimer) {
     clearTimeout(autoSaveTimer)
   }
-  
+
   if (hasChanges.value && appStore.config.autoSave) {
     autoSaveTimer = setTimeout(() => {
       saveDocument()
@@ -256,10 +384,26 @@ watch([documentTitle, blocks], () => {
   }
 }, { deep: true })
 
+// Watch for document changes
+watch(currentDocument, (newDoc) => {
+  if (newDoc) {
+    documentTitle.value = newDoc.title
+    hasChanges.value = false
+  } else {
+    documentTitle.value = ''
+    hasChanges.value = false
+  }
+}, { immediate: true })
+
+// Watch for title changes
+watch(documentTitle, () => {
+  markAsChanged()
+})
+
 onMounted(() => {
   // Initialize with empty document if none selected
   if (!currentDocument.value) {
-    fileSystemStore.createDocument()
+    documentView.createDocument()
   }
 })
 </script>

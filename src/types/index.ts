@@ -1,5 +1,8 @@
 // Core application types and interfaces
 
+// Export unified types for the integrated SiYuan + Heptabase system
+export * from './unified'
+
 export interface AppConfig {
   theme: 'light' | 'dark'
   language: string

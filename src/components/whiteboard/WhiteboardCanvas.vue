@@ -49,44 +49,75 @@
       </div>
       
       <div class="toolbar-group">
-        <button 
+        <button
           class="btn btn-sm btn-ghost"
-          @click="whiteboardStore.zoomIn()"
+          @click="whiteboardView.zoomIn()"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
           </svg>
         </button>
-        
+
         <span class="text-sm">{{ Math.round(currentZoom * 100) }}%</span>
-        
-        <button 
+
+        <button
           class="btn btn-sm btn-ghost"
-          @click="whiteboardStore.zoomOut()"
+          @click="whiteboardView.zoomOut()"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
           </svg>
         </button>
-        
-        <button 
+
+        <button
           class="btn btn-sm btn-ghost"
-          @click="whiteboardStore.resetZoom()"
+          @click="whiteboardView.resetZoom()"
         >
           Reset
         </button>
       </div>
-      
+
       <div class="toolbar-group">
-        <button 
+        <button
           class="btn btn-sm btn-ghost"
-          @click="whiteboardStore.centerView()"
+          @click="whiteboardView.centerView()"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
           Center
         </button>
+
+        <button
+          class="btn btn-sm btn-ghost"
+          @click="autoLayoutCanvas()"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Auto Layout
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <div class="dropdown dropdown-end">
+          <label tabindex="0" class="btn btn-sm btn-ghost">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Document
+          </label>
+          <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+            <li>
+              <a @click="addSelectedToDocument">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Selected to Document
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
       
       <div class="toolbar-group ml-auto">
@@ -128,15 +159,16 @@
           </v-layer>
           
           <v-layer ref="nodesLayer">
-            <!-- Render Nodes -->
+            <!-- Render Unified Blocks as Spatial Nodes -->
             <WhiteboardNode
-              v-for="node in currentNodes"
-              :key="node.id"
-              :node="node"
-              :is-selected="whiteboardStore.selectedNodes.includes(node.id)"
+              v-for="block in currentNodes"
+              :key="block.id"
+              :block="block"
+              :is-selected="whiteboardView.selectedNodeIds.value.includes(block.id)"
               @select="selectNode"
               @update="updateNode"
               @delete="deleteNode"
+              @add-to-document="addNodeToDocument"
             />
           </v-layer>
           
@@ -179,13 +211,17 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { useWhiteboardStore } from '@/stores/whiteboard'
+import { useWhiteboardView } from '@/composables/useWhiteboardView'
+import { useUnifiedIntegration } from '@/composables/useUnifiedIntegration'
+import { useUnifiedStore } from '@/stores/unified'
 import { useAppStore } from '@/stores/app'
-import type { WhiteboardNode as WhiteboardNodeType, Position } from '@/types'
+import type { UnifiedBlock, Position } from '@/types/unified'
 // import WhiteboardNode from './WhiteboardNode.vue'
 // import WhiteboardConnection from './WhiteboardConnection.vue'
 
-const whiteboardStore = useWhiteboardStore()
+const whiteboardView = useWhiteboardView()
+const unifiedIntegration = useUnifiedIntegration()
+const unifiedStore = useUnifiedStore()
 const appStore = useAppStore()
 
 // Temporary placeholder components
@@ -203,11 +239,11 @@ const selectionRect = ref<{ x: number; y: number; width: number; height: number 
 const isDrawing = ref(false)
 const lastPointerPosition = ref<Position>({ x: 0, y: 0 })
 
-// Computed
-const currentCanvas = computed(() => whiteboardStore.currentCanvas)
-const currentNodes = computed(() => whiteboardStore.currentNodes)
-const currentConnections = computed(() => whiteboardStore.currentConnections)
-const currentZoom = computed(() => currentCanvas.value?.viewport.zoom || 1)
+// Computed - using unified whiteboard view
+const currentCanvas = computed(() => whiteboardView.currentCanvas.value)
+const currentNodes = computed(() => whiteboardView.canvasBlocks.value)
+const currentConnections = computed(() => whiteboardView.canvasConnections.value)
+const currentZoom = computed(() => whiteboardView.viewport.value.zoom)
 const showGrid = computed(() => currentCanvas.value?.settings.gridEnabled || true)
 const showMinimap = computed(() => currentCanvas.value?.settings.showMinimap || true)
 
@@ -216,8 +252,8 @@ const stageConfig = computed(() => ({
   height: canvasContainer.value?.clientHeight || 600,
   scaleX: currentZoom.value,
   scaleY: currentZoom.value,
-  x: currentCanvas.value?.viewport.x || 0,
-  y: currentCanvas.value?.viewport.y || 0,
+  x: whiteboardView.viewport.value.x,
+  y: whiteboardView.viewport.value.y,
   draggable: selectedTool.value === 'select'
 }))
 
@@ -248,33 +284,46 @@ const selectionRectConfig = computed(() => {
 // Methods
 function setTool(tool: typeof selectedTool.value) {
   selectedTool.value = tool
-  whiteboardStore.clearSelection()
+  whiteboardView.clearSelection()
 }
 
 function selectNode(nodeId: string, addToSelection = false) {
-  whiteboardStore.selectNode(nodeId, addToSelection)
+  whiteboardView.selectNode(nodeId, addToSelection)
 }
 
-function updateNode(nodeId: string, updates: Partial<WhiteboardNodeType>) {
-  whiteboardStore.updateNode(nodeId, updates)
+function updateNode(nodeId: string, updates: Partial<UnifiedBlock>) {
+  // Update through unified store to ensure all views sync
+  unifiedStore.updateBlock(nodeId, updates)
   hasChanges.value = true
 }
 
 function deleteNode(nodeId: string) {
-  whiteboardStore.deleteNode(nodeId)
+  unifiedStore.deleteBlock(nodeId)
   hasChanges.value = true
 }
 
-function deleteConnection(connectionId: string) {
-  whiteboardStore.deleteConnection(connectionId)
+function deleteConnection(fromNodeId: string, connectionId: string) {
+  whiteboardView.deleteConnection(fromNodeId, connectionId)
   hasChanges.value = true
+}
+
+// New unified feature: Add node to document
+function addNodeToDocument(nodeId: string) {
+  const result = unifiedIntegration.addWhiteboardNodeToDocument(nodeId)
+  if (result) {
+    appStore.addError(appStore.createError(
+      'DOCUMENT_ADD_SUCCESS',
+      'Node added to document',
+      'integration'
+    ))
+  }
 }
 
 function handleStageMouseDown(e: any) {
   if (selectedTool.value === 'select') {
     const clickedOnEmpty = e.target === e.target.getStage()
     if (clickedOnEmpty) {
-      whiteboardStore.clearSelection()
+      whiteboardView.clearSelection()
       // Start selection rectangle
       const pos = e.target.getStage().getPointerPosition()
       selectionRect.value = { x: pos.x, y: pos.y, width: 0, height: 0 }
@@ -287,7 +336,7 @@ function handleStageMouseDown(e: any) {
     const pos = e.target.getStage().getPointerPosition()
     createShapeNode(pos)
   }
-  
+
   lastPointerPosition.value = e.target.getStage().getPointerPosition()
 }
 
@@ -301,70 +350,117 @@ function handleStageMouseMove(e: any) {
 
 function handleStageMouseUp() {
   if (isDrawing.value && selectionRect.value) {
-    // Select nodes within selection rectangle
+    // Select nodes within selection rectangle using unified blocks
     const rect = selectionRect.value
     const selectedNodeIds: string[] = []
-    
-    currentNodes.value.forEach(node => {
-      if (
-        node.position.x >= Math.min(rect.x, rect.x + rect.width) &&
-        node.position.x + node.size.width <= Math.max(rect.x, rect.x + rect.width) &&
-        node.position.y >= Math.min(rect.y, rect.y + rect.height) &&
-        node.position.y + node.size.height <= Math.max(rect.y, rect.y + rect.height)
-      ) {
-        selectedNodeIds.push(node.id)
+
+    currentNodes.value.forEach(block => {
+      if (block.spatialProperties) {
+        const pos = block.spatialProperties.position
+        const size = block.spatialProperties.size
+        if (
+          pos.x >= Math.min(rect.x, rect.x + rect.width) &&
+          pos.x + size.width <= Math.max(rect.x, rect.x + rect.width) &&
+          pos.y >= Math.min(rect.y, rect.y + rect.height) &&
+          pos.y + size.height <= Math.max(rect.y, rect.y + rect.height)
+        ) {
+          selectedNodeIds.push(block.id)
+        }
       }
     })
-    
-    selectedNodeIds.forEach(nodeId => whiteboardStore.selectNode(nodeId, true))
+
+    selectedNodeIds.forEach(nodeId => whiteboardView.selectNode(nodeId, true))
   }
-  
+
   isDrawing.value = false
   selectionRect.value = null
 }
 
 function handleWheel(e: any) {
   e.evt.preventDefault()
-  
+
   const scaleBy = 1.1
   const stage = e.target.getStage()
   const oldScale = stage.scaleX()
   const pointer = stage.getPointerPosition()
-  
+
   const mousePointTo = {
     x: (pointer.x - stage.x()) / oldScale,
     y: (pointer.y - stage.y()) / oldScale
   }
-  
+
   const newScale = e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy
-  
-  whiteboardStore.updateViewport({
-    zoom: Math.max(0.1, Math.min(3, newScale)),
-    x: pointer.x - mousePointTo.x * newScale,
-    y: pointer.y - mousePointTo.y * newScale
-  })
+  const clampedScale = Math.max(0.1, Math.min(3, newScale))
+
+  whiteboardView.updateViewport(
+    pointer.x - mousePointTo.x * clampedScale,
+    pointer.y - mousePointTo.y * clampedScale,
+    clampedScale
+  )
 }
 
 function createTextNode(position: Position) {
-  const node = whiteboardStore.createNode('text', position, 'New Text Node')
-  hasChanges.value = true
-  selectNode(node.id)
+  const result = whiteboardView.createSpatialBlock('whiteboard-text', position, 'New Text Node')
+  if (result.success && result.blockId) {
+    hasChanges.value = true
+    selectNode(result.blockId)
+  }
 }
 
 function createShapeNode(position: Position) {
-  const node = whiteboardStore.createNode('shape', position, '', { width: 100, height: 100 })
-  hasChanges.value = true
-  selectNode(node.id)
+  const result = whiteboardView.createSpatialBlock('shape', position, '', { width: 100, height: 100 })
+  if (result.success && result.blockId) {
+    hasChanges.value = true
+    selectNode(result.blockId)
+  }
+}
+
+// New unified features
+function addSelectedToDocument() {
+  const selectedBlocks = whiteboardView.selectedNodeIds.value
+  if (selectedBlocks.length === 0) {
+    appStore.addError(appStore.createError(
+      'NO_SELECTION',
+      'Please select nodes to add to document',
+      'integration'
+    ))
+    return
+  }
+
+  let successCount = 0
+  for (const blockId of selectedBlocks) {
+    const result = unifiedIntegration.addWhiteboardNodeToDocument(blockId)
+    if (result) successCount++
+  }
+
+  if (successCount > 0) {
+    appStore.addError(appStore.createError(
+      'DOCUMENT_ADD_SUCCESS',
+      `${successCount} node(s) added to document`,
+      'integration'
+    ))
+  }
+}
+
+function autoLayoutCanvas() {
+  if (currentCanvas.value) {
+    unifiedIntegration.autoLayoutCanvas(currentCanvas.value.id)
+    appStore.addError(appStore.createError(
+      'LAYOUT_SUCCESS',
+      'Canvas auto-layout applied',
+      'whiteboard'
+    ))
+  }
 }
 
 async function saveCanvas() {
   if (!currentCanvas.value) return
-  
+
   try {
     appStore.setLoading(true)
-    // TODO: Implement canvas saving via Tauri API
+    // The unified store automatically handles persistence
     hasChanges.value = false
-    
+
     appStore.addError(appStore.createError(
       'SAVE_SUCCESS',
       'Canvas saved successfully',
@@ -397,9 +493,9 @@ function handleResize() {
 onMounted(() => {
   // Initialize canvas if none exists
   if (!currentCanvas.value) {
-    whiteboardStore.createCanvas()
+    whiteboardView.createCanvas()
   }
-  
+
   window.addEventListener('resize', handleResize)
   handleResize()
 })
