@@ -4,6 +4,7 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -14,12 +15,40 @@
     "noEmit": true,
     "jsx": "preserve",
 
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/composables/*": ["src/composables/*"],
+      "@/stores/*": ["src/stores/*"],
+      "@/views/*": ["src/views/*"],
+      "@/layouts/*": ["src/layouts/*"],
+      "@/router/*": ["src/router/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"]
+    },
+
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src-tauri/target"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
