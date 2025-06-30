@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
-use std::env;
 
 pub struct UnifiedStorage {
     workspace_dir: PathBuf,
@@ -12,11 +11,11 @@ pub struct UnifiedStorage {
 
 impl UnifiedStorage {
     pub fn new(app_handle: &AppHandle) -> Result<Self, UnifiedError> {
-        let app_data_dir = app_handle.path_resolver()
+        let app_data_dir = app_handle.path()
             .app_data_dir()
-            .ok_or_else(|| UnifiedError {
+            .map_err(|e| UnifiedError {
                 code: "APP_DATA_DIR_ERROR".to_string(),
-                message: "Failed to get app data directory".to_string(),
+                message: format!("Failed to get app data directory: {}", e),
                 details: None,
             })?;
 

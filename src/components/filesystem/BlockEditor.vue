@@ -282,7 +282,7 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-function changeBlockType(newType: BlockType) {
+function changeBlockType(newType: UnifiedBlockType) {
   emit('update', props.block.id, { type: newType })
 }
 

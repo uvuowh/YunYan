@@ -139,7 +139,7 @@ export function blockToMarkdown(block: Block): string {
  * Render markdown to HTML
  */
 export function renderMarkdown(markdown: string): string {
-  return marked(markdown)
+  return marked.parse(markdown) as string
 }
 
 /**
@@ -147,7 +147,7 @@ export function renderMarkdown(markdown: string): string {
  */
 export function renderBlock(block: Block): string {
   const markdown = blockToMarkdown(block)
-  return marked(markdown)
+  return marked.parse(markdown) as string
 }
 
 /**

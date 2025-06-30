@@ -553,15 +553,15 @@ export const useUnifiedStore = defineStore('unified', () => {
     }
 
     // Apply sorting
-    if (query.sort_by) {
+    if (query.sortBy) {
       matchingBlocks.sort((a, b) => {
-        switch (query.sort_by) {
+        switch (query.sortBy) {
           case 'createdAt':
-            return query.sort_order === 'desc'
+            return query.sortOrder === 'desc'
               ? b.metadata.createdAt.getTime() - a.metadata.createdAt.getTime()
               : a.metadata.createdAt.getTime() - b.metadata.createdAt.getTime()
           case 'updatedAt':
-            return query.sort_order === 'desc'
+            return query.sortOrder === 'desc'
               ? b.metadata.updatedAt.getTime() - a.metadata.updatedAt.getTime()
               : a.metadata.updatedAt.getTime() - b.metadata.updatedAt.getTime()
           case 'position':
@@ -588,13 +588,13 @@ export const useUnifiedStore = defineStore('unified', () => {
 
   function matchesQuery(block: UnifiedBlock, query: BlockQuery): boolean {
     // Content filters
-    if (query.content_contains && !block.content.toLowerCase().includes(query.content_contains.toLowerCase())) {
+    if (query.contentContains && !block.content.toLowerCase().includes(query.contentContains.toLowerCase())) {
       return false
     }
 
-    if (query.content_regex) {
+    if (query.contentRegex) {
       try {
-        const regex = new RegExp(query.content_regex, 'i')
+        const regex = new RegExp(query.contentRegex, 'i')
         if (!regex.test(block.content)) return false
       } catch {
         return false
@@ -606,42 +606,42 @@ export const useUnifiedStore = defineStore('unified', () => {
       return false
     }
 
-    if (query.exclude_types && query.exclude_types.includes(block.type)) {
+    if (query.excludeTypes && query.excludeTypes.includes(block.type)) {
       return false
     }
 
     // Hierarchical filters
-    if (query.has_parent !== undefined) {
-      if (query.has_parent && !block.parentId) return false
-      if (!query.has_parent && block.parentId) return false
+    if (query.hasParent !== undefined) {
+      if (query.hasParent && !block.parentId) return false
+      if (!query.hasParent && block.parentId) return false
     }
 
-    if (query.has_children !== undefined) {
-      if (query.has_children && block.children.length === 0) return false
-      if (!query.has_children && block.children.length > 0) return false
+    if (query.hasChildren !== undefined) {
+      if (query.hasChildren && block.children.length === 0) return false
+      if (!query.hasChildren && block.children.length > 0) return false
     }
 
-    if (query.parent_id && block.parentId !== query.parent_id) {
+    if (query.parentId && block.parentId !== query.parentId) {
       return false
     }
 
     // Spatial filters
-    if (query.on_canvas) {
+    if (query.onCanvas) {
       if (!block.spatialProperties ||
-          block.spatialProperties.canvasId !== query.on_canvas ||
+          block.spatialProperties.canvasId !== query.onCanvas ||
           !block.spatialProperties.isVisible) {
         return false
       }
     }
 
-    if (query.in_region && block.spatialProperties) {
+    if (query.inRegion && block.spatialProperties) {
       const { position, size } = block.spatialProperties
-      const { top_left, bottom_right } = query.in_region
+      const { topLeft, bottomRight } = query.inRegion
 
-      if (position.x < top_left.x ||
-          position.y < top_left.y ||
-          position.x + size.width > bottom_right.x ||
-          position.y + size.height > bottom_right.y) {
+      if (position.x < topLeft.x ||
+          position.y < topLeft.y ||
+          position.x + size.width > bottomRight.x ||
+          position.y + size.height > bottomRight.y) {
         return false
       }
     }
@@ -651,11 +651,11 @@ export const useUnifiedStore = defineStore('unified', () => {
       return false
     }
 
-    if (query.created_after && block.metadata.createdAt <= query.created_after) {
+    if (query.createdAfter && block.metadata.createdAt <= query.createdAfter) {
       return false
     }
 
-    if (query.created_before && block.metadata.createdAt >= query.created_before) {
+    if (query.createdBefore && block.metadata.createdAt >= query.createdBefore) {
       return false
     }
 

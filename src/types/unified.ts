@@ -4,6 +4,9 @@
 
 import type { Position, Size, NodeStyle, ConnectionStyle } from './index'
 
+// Re-export commonly used types for convenience
+export type { Position, Size, NodeStyle, ConnectionStyle } from './index'
+
 // ============================================================================
 // CORE UNIFIED BLOCK TYPES
 // ============================================================================
@@ -295,15 +298,16 @@ export interface UpdateBlockOptions {
   content?: string
   type?: UnifiedBlockType
   properties?: Record<string, any>
-  
+
   // Hierarchical updates
   newParentId?: string
   newPosition?: number
-  
+
   // Spatial updates
   spatialProperties?: Partial<SpatialProperties>
-  
+
   // Metadata updates
+  metadata?: Partial<UnifiedBlockMetadata>
   tags?: string[]
   addTags?: string[]
   removeTags?: string[]
@@ -339,9 +343,9 @@ export interface UnifiedSyncEvent {
   userId?: string
 }
 
-export type UnifiedSyncEventType = 
+export type UnifiedSyncEventType =
   | 'block_created'
-  | 'block_updated' 
+  | 'block_updated'
   | 'block_deleted'
   | 'block_moved'
   | 'spatial_updated'
@@ -349,3 +353,13 @@ export type UnifiedSyncEventType =
   | 'connection_deleted'
   | 'canvas_updated'
   | 'document_updated'
+
+// ============================================================================
+// ERROR TYPES
+// ============================================================================
+
+export interface UnifiedError {
+  code: string
+  message: string
+  details?: any
+}

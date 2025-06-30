@@ -8,8 +8,6 @@ mod storage;
 
 use unified::*;
 use storage::UnifiedStorage;
-use std::sync::Mutex;
-use tauri::State;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Document {

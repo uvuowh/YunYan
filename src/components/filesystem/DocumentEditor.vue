@@ -151,7 +151,7 @@ import { useUnifiedIntegration } from '@/composables/useUnifiedIntegration'
 import { useUnifiedStore } from '@/stores/unified'
 import { useAppStore } from '@/stores/app'
 import type { UnifiedBlock, UnifiedBlockType } from '@/types/unified'
-import { parseMarkdownToBlocks, blocksToMarkdown, renderMarkdown, getWordCount, calculateReadingTime } from '@/utils/markdown'
+import { renderMarkdown } from '@/utils/markdown'
 import BlockEditor from './BlockEditor.vue'
 
 const documentView = useDocumentView()
@@ -165,7 +165,10 @@ const hasChanges = ref(false)
 // Computed - using unified document view
 const currentDocument = computed(() => documentView.currentDocument)
 const documentTitle = ref('')
-const blocks = computed(() => documentView.documentBlocks)
+const blocks = computed(() => {
+  if (!currentDocument.value) return []
+  return documentView.documentBlocks.value || []
+})
 const showPreview = computed({
   get: () => documentView.showPreview.value,
   set: (value) => documentView.showPreview.value = value
@@ -176,18 +179,18 @@ const readingTime = computed(() => documentView.documentStats.value.readingTime)
 
 const renderedContent = computed(() => {
   if (!currentDocument.value) return ''
-  return renderMarkdown(currentDocument.value.content)
+  // Use blocks content instead of document content for rendering
+  const allContent = blocks.value.map(block => block.content).join('\n\n')
+  return renderMarkdown(allContent)
 })
 
 // Watch for document changes
 watch(currentDocument, (newDoc) => {
-  if (newDoc) {
-    documentTitle.value = newDoc.title
-    blocks.value = newDoc.blocks.length > 0 ? newDoc.blocks : parseMarkdownToBlocks(newDoc.content)
+  if (newDoc?.value) {
+    documentTitle.value = newDoc.value.title
     hasChanges.value = false
   } else {
     documentTitle.value = ''
-    blocks.value = []
     hasChanges.value = false
   }
 }, { immediate: true })
@@ -217,7 +220,7 @@ function addBlockAfter(index: number, type: UnifiedBlockType = 'paragraph') {
   const targetBlock = blocks.value[index]
   if (targetBlock) {
     const result = documentView.createBlockAfter(targetBlock.id, type)
-    if (result.success) {
+    if (result?.success) {
       markAsChanged()
     }
   }
@@ -268,24 +271,24 @@ function moveBlockDown(index: number) {
 }
 
 // New unified feature: Add block to whiteboard
-function addBlockToWhiteboard(blockId: string) {
-  const result = unifiedIntegration.addDocumentBlockToWhiteboard(blockId)
-  if (result) {
-    appStore.addError(appStore.createError(
-      'WHITEBOARD_ADD_SUCCESS',
-      'Block added to whiteboard',
-      'integration'
-    ))
-  }
-}
+// function addBlockToWhiteboard(blockId: string) {
+//   const result = unifiedIntegration.addDocumentBlockToWhiteboard(blockId)
+//   if (result) {
+//     appStore.addError(appStore.createError(
+//       'WHITEBOARD_ADD_SUCCESS',
+//       'Block added to whiteboard',
+//       'integration'
+//     ))
+//   }
+// }
 
 // New unified feature: Convert block type
-function convertBlockType(blockId: string, newType: UnifiedBlockType) {
-  const result = documentView.convertBlockType(blockId, newType)
-  if (result.success) {
-    markAsChanged()
-  }
-}
+// function convertBlockType(blockId: string, newType: UnifiedBlockType) {
+//   const result = documentView.convertBlockType(blockId, newType)
+//   if (result.success) {
+//     markAsChanged()
+//   }
+// }
 
 // Whiteboard integration methods
 function addSelectedToWhiteboard() {
@@ -370,7 +373,7 @@ async function saveDocument() {
 }
 
 // Auto-save functionality
-let autoSaveTimer: NodeJS.Timeout | null = null
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
 
 watch([documentTitle, blocks], () => {
   if (autoSaveTimer) {
@@ -384,16 +387,7 @@ watch([documentTitle, blocks], () => {
   }
 }, { deep: true })
 
-// Watch for document changes
-watch(currentDocument, (newDoc) => {
-  if (newDoc) {
-    documentTitle.value = newDoc.title
-    hasChanges.value = false
-  } else {
-    documentTitle.value = ''
-    hasChanges.value = false
-  }
-}, { immediate: true })
+// Duplicate watch removed - already handled above
 
 // Watch for title changes
 watch(documentTitle, () => {

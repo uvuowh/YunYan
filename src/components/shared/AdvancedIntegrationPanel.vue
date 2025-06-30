@@ -382,7 +382,7 @@ const searchFilters = ref({
 // ============================================================================
 
 const selectedBlocks = computed(() => {
-  return Array.from(unifiedStore.selectedBlockIds.value)
+  return Array.from(unifiedStore.selectedBlockIds)
     .map(id => unifiedStore.blocks.get(id))
     .filter(Boolean) as UnifiedBlock[]
 })
@@ -580,8 +580,8 @@ function performAdvancedSearch() {
   if (!searchQuery.value.trim()) return
   
   const query: BlockQuery = {
-    content_contains: searchFilters.value.includeContent ? searchQuery.value : undefined,
-    on_canvas: searchFilters.value.spatialOnly ? unifiedStore.currentCanvasId || undefined : undefined
+    contentContains: searchFilters.value.includeContent ? searchQuery.value : undefined,
+    onCanvas: searchFilters.value.spatialOnly ? unifiedStore.currentCanvasId || undefined : undefined
   }
   
   const result = unifiedStore.queryBlocks(query)
