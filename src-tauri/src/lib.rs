@@ -24,7 +24,17 @@ pub fn run() {
             log::info!("YunYan application initialized successfully");
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            create_whiteboard,
+            get_whiteboard,
+            list_whiteboards,
+            update_whiteboard,
+            delete_whiteboard,
+            create_card,
+            update_card,
+            delete_card
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -90,6 +90,67 @@ export const systemCommands = {
 }
 
 /**
+ * 白板命令
+ */
+export const whiteboardCommands = {
+  /**
+   * 创建白板
+   */
+  async createWhiteboard(params: any, options?: InvokeOptions): Promise<ApiResponse<any>> {
+    return invokeCommand('create_whiteboard', params, options)
+  },
+
+  /**
+   * 获取白板
+   */
+  async getWhiteboard(params: any, options?: InvokeOptions): Promise<ApiResponse<any>> {
+    return invokeCommand('get_whiteboard', params, options)
+  },
+
+  /**
+   * 列出所有白板
+   */
+  async listWhiteboards(options?: InvokeOptions): Promise<ApiResponse<any[]>> {
+    return invokeCommand('list_whiteboards', undefined, options)
+  },
+
+  /**
+   * 更新白板
+   */
+  async updateWhiteboard(params: any, options?: InvokeOptions): Promise<ApiResponse<any>> {
+    return invokeCommand('update_whiteboard', params, options)
+  },
+
+  /**
+   * 删除白板
+   */
+  async deleteWhiteboard(params: any, options?: InvokeOptions): Promise<ApiResponse<void>> {
+    return invokeCommand('delete_whiteboard', params, options)
+  },
+
+  /**
+   * 创建卡片
+   */
+  async createCard(params: any, options?: InvokeOptions): Promise<ApiResponse<any>> {
+    return invokeCommand('create_card', params, options)
+  },
+
+  /**
+   * 更新卡片
+   */
+  async updateCard(params: any, options?: InvokeOptions): Promise<ApiResponse<any>> {
+    return invokeCommand('update_card', params, options)
+  },
+
+  /**
+   * 删除卡片
+   */
+  async deleteCard(params: any, options?: InvokeOptions): Promise<ApiResponse<void>> {
+    return invokeCommand('delete_card', params, options)
+  },
+}
+
+/**
  * 统一的命令接口
  */
 export const commands = {
@@ -97,6 +158,7 @@ export const commands = {
   ...fileSystemCommands,
   ...configCommands,
   ...systemCommands,
+  ...whiteboardCommands,
 }
 
 /**

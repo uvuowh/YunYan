@@ -1,13 +1,19 @@
 <script setup lang="ts">
+import WhiteboardPage from '@/pages/WhiteboardPage.vue'
 import { useAppStore, useSystemStore } from '@/stores'
 import { commands } from '@/tauri'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const appStore = useAppStore()
 const systemStore = useSystemStore()
 
 const greetMsg = ref('')
 const name = ref('')
+const currentPage = ref<'home' | 'whiteboard'>('home')
+
+// 计算属性来避免类型问题
+const isHomePage = computed(() => currentPage.value === 'home')
+const isWhiteboardPage = computed(() => currentPage.value === 'whiteboard')
 
 async function greet() {
   if (!name.value.trim()) {
@@ -29,6 +35,10 @@ async function greet() {
   }
 }
 
+const navigateTo = (page: 'home' | 'whiteboard') => {
+  currentPage.value = page
+}
+
 onMounted(async () => {
   try {
     await appStore.initialize()
@@ -39,7 +49,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="container">
+  <!-- 白板页面 -->
+  <WhiteboardPage v-if="currentPage === 'whiteboard'" />
+
+  <!-- 主页 -->
+  <main v-else class="container">
     <!-- 加载状态 -->
     <div v-if="appStore.isLoading" class="loading">
       <p>正在初始化应用...</p>
@@ -47,7 +61,25 @@ onMounted(async () => {
 
     <!-- 主要内容 -->
     <div v-else>
-      <h1>Welcome to YunYan</h1>
+      <!-- 导航栏 -->
+      <nav class="navigation">
+        <h1>Welcome to YunYan</h1>
+        <div class="nav-buttons">
+          <button
+            @click="navigateTo('home')"
+            :class="{ active: isHomePage }"
+          >
+            主页
+          </button>
+          <button
+            @click="navigateTo('whiteboard')"
+            :class="{ active: isWhiteboardPage }"
+          >
+            白板
+          </button>
+        </div>
+      </nav>
+
       <p class="subtitle">基于 Tauri + Vue + TypeScript 的现代化桌面应用</p>
 
       <!-- 系统信息 -->
@@ -119,6 +151,35 @@ onMounted(async () => {
 .subtitle {
   color: #666;
   margin-bottom: 2rem;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.navigation h1 {
+  margin: 0;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-buttons button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.nav-buttons button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 
 .loading {

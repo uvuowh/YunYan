@@ -72,6 +72,104 @@ export interface SystemInfoResponse {
   cpuCount: number
 }
 
+// 白板相关命令类型
+export interface CreateWhiteboardCommand {
+  name: string
+  description?: string
+}
+
+export interface GetWhiteboardCommand {
+  id: string
+}
+
+export interface UpdateWhiteboardCommand {
+  id: string
+  name?: string
+  description?: string
+  viewport?: {
+    x: number
+    y: number
+    zoom: number
+  }
+  settings?: Record<string, any>
+}
+
+export interface DeleteWhiteboardCommand {
+  id: string
+}
+
+export interface CreateCardCommand {
+  whiteboard_id: string
+  title: string
+  content: string
+  position: {
+    x: number
+    y: number
+  }
+  size: {
+    width: number
+    height: number
+  }
+}
+
+export interface UpdateCardCommand {
+  whiteboard_id: string
+  card_id: string
+  title?: string
+  content?: string
+  position?: {
+    x: number
+    y: number
+  }
+  size?: {
+    width: number
+    height: number
+  }
+  style?: Record<string, any>
+}
+
+export interface DeleteCardCommand {
+  whiteboard_id: string
+  card_id: string
+}
+
+// 白板响应类型
+export interface WhiteboardResponse {
+  id: string
+  name: string
+  description: string
+  viewport: {
+    x: number
+    y: number
+    zoom: number
+  }
+  cards: WhiteboardCardResponse[]
+  connections: any[]
+  sections: any[]
+  settings: Record<string, any>
+  metadata: Record<string, any>
+  createdAt: number
+  updatedAt: number
+}
+
+export interface WhiteboardCardResponse {
+  id: string
+  title: string
+  content: string
+  position: {
+    x: number
+    y: number
+  }
+  size: {
+    width: number
+    height: number
+  }
+  style: Record<string, any>
+  metadata: Record<string, any>
+  createdAt: number
+  updatedAt: number
+}
+
 /**
  * 所有 Tauri 命令的类型映射
  */
@@ -113,6 +211,47 @@ export interface TauriCommands {
   get_system_info: {
     args: void
     returns: ApiResponse<SystemInfoResponse>
+  }
+
+  // 白板命令
+  create_whiteboard: {
+    args: CreateWhiteboardCommand
+    returns: ApiResponse<WhiteboardResponse>
+  }
+
+  get_whiteboard: {
+    args: GetWhiteboardCommand
+    returns: ApiResponse<WhiteboardResponse>
+  }
+
+  list_whiteboards: {
+    args: void
+    returns: ApiResponse<WhiteboardResponse[]>
+  }
+
+  update_whiteboard: {
+    args: UpdateWhiteboardCommand
+    returns: ApiResponse<WhiteboardResponse>
+  }
+
+  delete_whiteboard: {
+    args: DeleteWhiteboardCommand
+    returns: ApiResponse<void>
+  }
+
+  create_card: {
+    args: CreateCardCommand
+    returns: ApiResponse<WhiteboardCardResponse>
+  }
+
+  update_card: {
+    args: UpdateCardCommand
+    returns: ApiResponse<WhiteboardCardResponse>
+  }
+
+  delete_card: {
+    args: DeleteCardCommand
+    returns: ApiResponse<void>
   }
 }
 

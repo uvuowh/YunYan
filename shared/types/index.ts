@@ -9,6 +9,9 @@ export * from './events'
 // IPC 通信类型
 export * from './ipc'
 
+// 白板类型
+export * from './whiteboard'
+
 // 类型工具函数
 export type Nullable<T> = T | null
 export type Optional<T> = T | undefined

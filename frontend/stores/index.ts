@@ -1,7 +1,8 @@
 // Stores 统一导出
 export { useAppStore } from './app'
-export { useSystemStore } from './system'
 export { useConfigStore } from './config'
+export { useSystemStore } from './system'
+export { useWhiteboardStore } from './whiteboard'
 
 // 类型导出
-export type { AppConfigData, Theme, Language } from '@shared/types'
+export type { AppConfigData, Language, Theme } from '@shared/types'
