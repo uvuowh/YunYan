@@ -73,6 +73,15 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true,
         },
       },
+      {
+        path: '/block-system',
+        name: 'BlockSystem',
+        component: () => import('@/views/BlockSystemDemo.vue'),
+        meta: {
+          title: 'Block System Demo',
+          requiresAuth: false,
+        },
+      },
     ],
   },
   {

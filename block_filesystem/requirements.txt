@@ -1,0 +1,7 @@
+sqlite3
+json
+uuid
+datetime
+pathlib
+typing
+dataclasses

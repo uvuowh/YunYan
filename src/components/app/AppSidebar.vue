@@ -90,6 +90,7 @@ const navigationItems: NavigationItem[] = [
 ]
 
 const toolItems: NavigationItem[] = [
+  { path: '/block-system', label: 'Block System', icon: '🧩' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
   { path: '/help', label: 'Help', icon: '❓' },
   { path: '/feedback', label: 'Feedback', icon: '💬' },
