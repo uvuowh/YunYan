@@ -1,16 +1,16 @@
 // 白板状态管理
 import { commands } from '@/tauri'
 import type {
-    DragState,
-    HistoryEntry,
-    Point,
-    ResizeState,
-    SelectionState,
-    Size,
-    ToolType,
-    Viewport,
-    Whiteboard,
-    WhiteboardCard,
+  DragState,
+  HistoryEntry,
+  Point,
+  ResizeState,
+  SelectionState,
+  Size,
+  ToolType,
+  Viewport,
+  Whiteboard,
+  WhiteboardCard,
 } from '@shared/types'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'

@@ -65,16 +65,8 @@ onMounted(async () => {
       <nav class="navigation">
         <h1>Welcome to YunYan</h1>
         <div class="nav-buttons">
-          <button
-            @click="navigateTo('home')"
-            :class="{ active: isHomePage }"
-          >
-            主页
-          </button>
-          <button
-            @click="navigateTo('whiteboard')"
-            :class="{ active: isWhiteboardPage }"
-          >
+          <button @click="navigateTo('home')" :class="{ active: isHomePage }">主页</button>
+          <button @click="navigateTo('whiteboard')" :class="{ active: isWhiteboardPage }">
             白板
           </button>
         </div>
