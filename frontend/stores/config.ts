@@ -1,8 +1,7 @@
 // 配置状态管理
+import type { AppConfigData, Language, Theme } from '@shared/types'
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import { commands } from '@/tauri'
-import type { AppConfigData, Theme, Language } from '@shared/types'
+import { computed, ref, watch } from 'vue'
 
 export const useConfigStore = defineStore('config', () => {
   // 状态
@@ -32,11 +31,16 @@ export const useConfigStore = defineStore('config', () => {
   async function loadConfig() {
     isLoading.value = true
     try {
-      const response = await commands.getConfig()
-      if (response.success && response.data) {
-        config.value = { ...config.value, ...response.data }
-        isDirty.value = false
-      }
+      // TODO: 实现 get_config 命令后启用
+      // const response = await commands.getConfig()
+      // if (response.success && response.data) {
+      //   config.value = { ...config.value, ...response.data }
+      //   isDirty.value = false
+      // }
+
+      // 暂时使用默认配置
+      console.log('Using default config (mock)')
+      isDirty.value = false
     } catch (error) {
       console.error('Failed to load config:', error)
     } finally {
@@ -49,13 +53,16 @@ export const useConfigStore = defineStore('config', () => {
 
     isLoading.value = true
     try {
-      // 保存所有配置项
-      for (const [key, value] of Object.entries(config.value)) {
-        const response = await commands.setConfig({ key, value })
-        if (!response.success) {
-          throw new Error(`Failed to save config ${key}: ${response.error}`)
-        }
-      }
+      // TODO: 实现 set_config 命令后启用
+      // for (const [key, value] of Object.entries(config.value)) {
+      //   const response = await commands.setConfig({ key, value })
+      //   if (!response.success) {
+      //     throw new Error(`Failed to save config ${key}: ${response.error}`)
+      //   }
+      // }
+
+      // 暂时只在内存中保存
+      console.log('Config saved (mock):', config.value)
       isDirty.value = false
     } catch (error) {
       console.error('Failed to save config:', error)

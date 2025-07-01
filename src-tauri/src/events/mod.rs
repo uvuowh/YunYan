@@ -1,6 +1,6 @@
 // Events module - 自定义事件处理
-use tauri::AppHandle;
 use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemEvent {

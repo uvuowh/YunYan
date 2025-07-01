@@ -1,10 +1,9 @@
 // 系统状态管理
-import { commands, events } from '@/tauri'
 import type {
-  DiskUsageEvent,
-  ErrorEvent,
-  NetworkStatusEvent,
-  SystemInfoResponse,
+    DiskUsageEvent,
+    ErrorEvent,
+    NetworkStatusEvent,
+    SystemInfoResponse,
 } from '@shared/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -54,9 +53,20 @@ export const useSystemStore = defineStore('system', () => {
   async function loadSystemInfo() {
     isLoading.value = true
     try {
-      const response = await commands.getSystemInfo()
-      if (response.success && response.data) {
-        systemInfo.value = response.data
+      // TODO: 实现 get_system_info 命令后启用
+      // const response = await commands.getSystemInfo()
+      // if (response.success && response.data) {
+      //   systemInfo.value = response.data
+      // }
+
+      // 暂时使用模拟数据
+      systemInfo.value = {
+        platform: 'darwin',
+        arch: 'x64',
+        version: '1.0.0',
+        totalMemory: 16 * 1024 * 1024 * 1024, // 16GB
+        availableMemory: 8 * 1024 * 1024 * 1024, // 8GB
+        cpuCount: 8,
       }
     } catch (error) {
       console.error('Failed to load system info:', error)
@@ -95,16 +105,12 @@ export const useSystemStore = defineStore('system', () => {
   // 初始化事件监听
   async function setupEventListeners() {
     try {
-      // 监听磁盘使用情况更新
-      await events.onDiskUsageUpdate(updateDiskUsage)
+      // TODO: 实现事件系统后启用
+      // await events.onDiskUsageUpdate(updateDiskUsage)
+      // await events.onNetworkStatus(updateNetworkStatus)
+      // await events.onError(addError)
 
-      // 监听网络状态变化
-      await events.onNetworkStatus(updateNetworkStatus)
-
-      // 监听错误事件
-      await events.onError(addError)
-
-      console.log('System event listeners setup successfully')
+      console.log('System event listeners setup successfully (mock)')
     } catch (error) {
       console.error('Failed to setup system event listeners:', error)
     }
