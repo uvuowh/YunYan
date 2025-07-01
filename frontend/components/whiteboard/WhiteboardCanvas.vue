@@ -45,11 +45,7 @@
       </div>
 
       <div class="tool-group">
-        <button
-          class="tool-btn"
-          @click="resetView"
-          title="重置视图 (R)"
-        >
+        <button class="tool-btn" @click="resetView" title="重置视图 (R)">
           <span class="tool-icon">⌂</span>
         </button>
       </div>
@@ -114,7 +110,7 @@ const tools: Tool[] = [
   { id: 'select', name: '选择', icon: '⌖', tooltip: '选择和移动对象 (V)' },
   { id: 'pan', name: '平移', icon: '✋', tooltip: '平移画布 (H)' },
   { id: 'card', name: '卡片', icon: '📄', tooltip: '创建新卡片 (C)' },
-  { id: 'connect', name: '连接', icon: '🔗', tooltip: '连接卡片 (L)' }
+  { id: 'connect', name: '连接', icon: '🔗', tooltip: '连接卡片 (L)' },
 ]
 
 // 卡片数据
@@ -122,7 +118,8 @@ const cards = ref<Card[]>([
   {
     id: '1',
     title: '示例卡片 1',
-    content: '这是一个**示例卡片**，支持*Markdown*格式。\n\n你可以:\n- 拖拽移动\n- 双击编辑\n- 调整大小',
+    content:
+      '这是一个**示例卡片**，支持*Markdown*格式。\n\n你可以:\n- 拖拽移动\n- 双击编辑\n- 调整大小',
     position: { x: 100, y: 100 },
     size: { width: 200, height: 150 },
     style: {
@@ -134,16 +131,16 @@ const cards = ref<Card[]>([
       fontSize: 14,
       fontFamily: 'Arial, sans-serif',
       opacity: 1,
-      shadow: true
+      shadow: true,
     },
     metadata: {
       tags: ['示例'],
       priority: 'medium',
       status: 'draft',
-      attachments: []
+      attachments: [],
     },
     createdAt: Date.now(),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
   },
   {
     id: '2',
@@ -160,17 +157,17 @@ const cards = ref<Card[]>([
       fontSize: 14,
       fontFamily: 'Arial, sans-serif',
       opacity: 1,
-      shadow: true
+      shadow: true,
     },
     metadata: {
       tags: ['示例'],
       priority: 'low',
       status: 'draft',
-      attachments: []
+      attachments: [],
     },
     createdAt: Date.now(),
-    updatedAt: Date.now()
-  }
+    updatedAt: Date.now(),
+  },
 ])
 
 // 拖拽状态
@@ -184,21 +181,21 @@ const dragState = ref<{
 // 计算属性
 const cardsLayerStyle = computed(() => ({
   transform: `translate(${viewport.x}px, ${viewport.y}px)`,
-  transformOrigin: 'top left'
+  transformOrigin: 'top left',
 }))
 
 // 坐标转换
 const screenToWorld = (screenX: number, screenY: number): Point => {
   return {
     x: (screenX - viewport.x) / viewport.zoom,
-    y: (screenY - viewport.y) / viewport.zoom
+    y: (screenY - viewport.y) / viewport.zoom,
   }
 }
 
 const worldToScreen = (worldX: number, worldY: number): Point => {
   return {
     x: worldX * viewport.zoom + viewport.x,
-    y: worldY * viewport.zoom + viewport.y
+    y: worldY * viewport.zoom + viewport.y,
   }
 }
 
@@ -209,8 +206,8 @@ const cardWithScreenPosition = (card: Card): Card => {
     position: screenPos,
     size: {
       width: card.size.width * viewport.zoom,
-      height: card.size.height * viewport.zoom
-    }
+      height: card.size.height * viewport.zoom,
+    },
   }
 }
 
@@ -323,16 +320,16 @@ const createCard = (position: Point) => {
       fontSize: 14,
       fontFamily: 'Arial, sans-serif',
       opacity: 1,
-      shadow: true
+      shadow: true,
     },
     metadata: {
       tags: [],
       priority: 'medium',
       status: 'draft',
-      attachments: []
+      attachments: [],
     },
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   }
   cards.value.push(newCard)
   selectedCards.value = [newCard.id]
@@ -363,7 +360,7 @@ const handleCardDragStart = (event: MouseEvent, cardId: string) => {
     isDragging: true,
     cardId,
     startPos: { x: event.clientX, y: event.clientY },
-    startCardPos: { ...card.position }
+    startCardPos: { ...card.position },
   }
 }
 
@@ -384,7 +381,7 @@ onUnmounted(() => {
 
 // 暴露方法给父组件
 defineExpose({
-  resetView
+  resetView,
 })
 </script>
 

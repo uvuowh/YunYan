@@ -21,7 +21,7 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
   }>({
     start: { x: 0, y: 0 },
     end: { x: 0, y: 0 },
-    active: false
+    active: false,
   })
 
   // 计算属性
@@ -34,8 +34,10 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
   const selectionBounds = computed((): Rect | null => {
     if (selectedCards.value.length === 0) return null
 
-    let minX = Infinity, minY = Infinity
-    let maxX = -Infinity, maxY = -Infinity
+    let minX = Infinity,
+      minY = Infinity
+    let maxX = -Infinity,
+      maxY = -Infinity
 
     selectedCards.value.forEach(card => {
       minX = Math.min(minX, card.position.x)
@@ -48,7 +50,7 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
       x: minX,
       y: minY,
       width: maxX - minX,
-      height: maxY - minY
+      height: maxY - minY,
     }
   })
 
@@ -60,7 +62,7 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
       x: Math.min(start.x, end.x),
       y: Math.min(start.y, end.y),
       width: Math.abs(end.x - start.x),
-      height: Math.abs(end.y - start.y)
+      height: Math.abs(end.y - start.y),
     }
   })
 
@@ -121,10 +123,7 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
   }
 
   // 结束选择框并选择相交的卡片
-  const endSelectionBox = (
-    multiSelect = false,
-    screenToWorld: (x: number, y: number) => Point
-  ) => {
+  const endSelectionBox = (multiSelect = false, screenToWorld: (x: number, y: number) => Point) => {
     if (!selectionBox.active) return
 
     const boxRect = selectionBoxRect.value
@@ -135,7 +134,7 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
       x: Math.min(worldStart.x, worldEnd.x),
       y: Math.min(worldStart.y, worldEnd.y),
       width: Math.abs(worldEnd.x - worldStart.x),
-      height: Math.abs(worldEnd.y - worldStart.y)
+      height: Math.abs(worldEnd.y - worldStart.y),
     }
 
     // 找到与选择框相交的卡片
@@ -149,7 +148,10 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
     })
 
     if (intersectingCards.length > 0) {
-      selectCards(intersectingCards.map(card => card.id), multiSelect)
+      selectCards(
+        intersectingCards.map(card => card.id),
+        multiSelect
+      )
     } else if (!multiSelect) {
       clearSelection()
     }
@@ -179,8 +181,8 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
       id: `${card.id}_copy_${Date.now()}`,
       position: {
         x: card.position.x + 20,
-        y: card.position.y + 20
-      }
+        y: card.position.y + 20,
+      },
     }))
   }
 
@@ -220,9 +222,7 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
     if (selectedCards.value.length < 3) return
 
     const sortedCards = [...selectedCards.value].sort((a, b) => {
-      return type === 'horizontal'
-        ? a.position.x - b.position.x
-        : a.position.y - b.position.y
+      return type === 'horizontal' ? a.position.x - b.position.x : a.position.y - b.position.y
     })
 
     const first = sortedCards[0]
@@ -232,7 +232,8 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
 
     if (type === 'horizontal') {
       const totalWidth = last.position.x + last.size.width - first.position.x
-      const availableSpace = totalWidth - sortedCards.reduce((sum, card) => sum + card.size.width, 0)
+      const availableSpace =
+        totalWidth - sortedCards.reduce((sum, card) => sum + card.size.width, 0)
       const spacing = availableSpace / (sortedCards.length - 1)
 
       let currentX = first.position.x + first.size.width
@@ -245,7 +246,8 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
       }
     } else {
       const totalHeight = last.position.y + last.size.height - first.position.y
-      const availableSpace = totalHeight - sortedCards.reduce((sum, card) => sum + card.size.height, 0)
+      const availableSpace =
+        totalHeight - sortedCards.reduce((sum, card) => sum + card.size.height, 0)
       const spacing = availableSpace / (sortedCards.length - 1)
 
       let currentY = first.position.y + first.size.height
@@ -282,6 +284,6 @@ export function useWhiteboardSelection(options: UseWhiteboardSelectionOptions) {
     deleteSelectedCards,
     copySelectedCards,
     alignSelectedCards,
-    distributeSelectedCards
+    distributeSelectedCards,
   }
 }

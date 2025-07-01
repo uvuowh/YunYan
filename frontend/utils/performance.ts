@@ -20,11 +20,14 @@ export function throttle<T extends (...args: any[]) => any>(
       if (timeoutId) {
         clearTimeout(timeoutId)
       }
-      timeoutId = window.setTimeout(() => {
-        func(...args)
-        lastExecTime = Date.now()
-        timeoutId = null
-      }, delay - (currentTime - lastExecTime))
+      timeoutId = window.setTimeout(
+        () => {
+          func(...args)
+          lastExecTime = Date.now()
+          timeoutId = null
+        },
+        delay - (currentTime - lastExecTime)
+      )
     }
   }
 }
@@ -81,7 +84,7 @@ export function isRectInViewport(
     x: rect.x * viewport.zoom + viewport.x,
     y: rect.y * viewport.zoom + viewport.y,
     width: rect.width * viewport.zoom,
-    height: rect.height * viewport.zoom
+    height: rect.height * viewport.zoom,
   }
 
   return !(
@@ -95,10 +98,7 @@ export function isRectInViewport(
 /**
  * 计算两点之间的距离
  */
-export function distance(
-  p1: { x: number; y: number },
-  p2: { x: number; y: number }
-): number {
+export function distance(p1: { x: number; y: number }, p2: { x: number; y: number }): number {
   const dx = p2.x - p1.x
   const dy = p2.y - p1.y
   return Math.sqrt(dx * dx + dy * dy)
@@ -129,15 +129,18 @@ export function easeOutCubic(t: number): number {
  * 动画帧管理器
  */
 export class AnimationManager {
-  private animations = new Map<string, {
-    startTime: number
-    duration: number
-    from: number
-    to: number
-    onUpdate: (value: number) => void
-    onComplete?: () => void
-    easing?: (t: number) => number
-  }>()
+  private animations = new Map<
+    string,
+    {
+      startTime: number
+      duration: number
+      from: number
+      to: number
+      onUpdate: (value: number) => void
+      onComplete?: () => void
+      easing?: (t: number) => number
+    }
+  >()
 
   private rafId: number | null = null
 
@@ -159,7 +162,7 @@ export class AnimationManager {
       to,
       onUpdate,
       ...(options.onComplete && { onComplete: options.onComplete }),
-      easing: options.easing || easeOutCubic
+      easing: options.easing || easeOutCubic,
     })
 
     if (!this.rafId) {

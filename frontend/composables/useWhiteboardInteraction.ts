@@ -1,5 +1,11 @@
 // 白板交互相关的组合式函数
-import { animationManager, clamp, isRectInViewport, rafThrottle, throttle } from '@/utils/performance'
+import {
+  animationManager,
+  clamp,
+  isRectInViewport,
+  rafThrottle,
+  throttle,
+} from '@/utils/performance'
 import type { Point, Viewport, WhiteboardCard } from '@shared/types'
 import { computed, onMounted, onUnmounted, reactive, ref, type Ref } from 'vue'
 
@@ -13,14 +19,7 @@ export interface UseWhiteboardInteractionOptions {
 }
 
 export function useWhiteboardInteraction(options: UseWhiteboardInteractionOptions) {
-  const {
-    canvasRef,
-    containerRef,
-    viewport,
-    cards,
-    onViewportChange,
-    onCardUpdate
-  } = options
+  const { canvasRef, containerRef, viewport, cards, onViewportChange, onCardUpdate } = options
 
   // 状态
   const isDragging = ref(false)
@@ -46,7 +45,7 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
   }>({
     start: { x: 0, y: 0 },
     end: { x: 0, y: 0 },
-    active: false
+    active: false,
   })
 
   // 计算属性
@@ -58,7 +57,12 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
   const visibleCards = computed(() => {
     return cards.value.filter(card =>
       isRectInViewport(
-        { x: card.position.x, y: card.position.y, width: card.size.width, height: card.size.height },
+        {
+          x: card.position.x,
+          y: card.position.y,
+          width: card.size.width,
+          height: card.size.height,
+        },
         viewport,
         canvasSize
       )
@@ -69,14 +73,14 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
   const screenToWorld = (screenX: number, screenY: number): Point => {
     return {
       x: (screenX - viewport.x) / viewport.zoom,
-      y: (screenY - viewport.y) / viewport.zoom
+      y: (screenY - viewport.y) / viewport.zoom,
     }
   }
 
   const worldToScreen = (worldX: number, worldY: number): Point => {
     return {
       x: worldX * viewport.zoom + viewport.x,
-      y: worldY * viewport.zoom + viewport.y
+      y: worldY * viewport.zoom + viewport.y,
     }
   }
 
@@ -94,19 +98,13 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
     const startZoom = viewport.zoom
     const worldPos = screenToWorld(centerX, centerY)
 
-    animationManager.animate(
-      'zoom',
-      startZoom,
-      targetZoom,
-      200,
-      (currentZoom) => {
-        viewport.zoom = currentZoom
-        const newScreenPos = worldToScreen(worldPos.x, worldPos.y)
-        viewport.x += centerX - newScreenPos.x
-        viewport.y += centerY - newScreenPos.y
-        onViewportChange?.(viewport)
-      }
-    )
+    animationManager.animate('zoom', startZoom, targetZoom, 200, currentZoom => {
+      viewport.zoom = currentZoom
+      const newScreenPos = worldToScreen(worldPos.x, worldPos.y)
+      viewport.x += centerX - newScreenPos.x
+      viewport.y += centerY - newScreenPos.y
+      onViewportChange?.(viewport)
+    })
   }
 
   // 平滑平移动画
@@ -114,17 +112,11 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
     const startX = viewport.x
     const startY = viewport.y
 
-    animationManager.animate(
-      'pan',
-      0,
-      1,
-      300,
-      (progress) => {
-        viewport.x = startX + (targetX - startX) * progress
-        viewport.y = startY + (targetY - startY) * progress
-        onViewportChange?.(viewport)
-      }
-    )
+    animationManager.animate('pan', 0, 1, 300, progress => {
+      viewport.x = startX + (targetX - startX) * progress
+      viewport.y = startY + (targetY - startY) * progress
+      onViewportChange?.(viewport)
+    })
   }
 
   // 事件处理器
@@ -170,10 +162,12 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
     // 检查是否点击了卡片
     const worldPos = screenToWorld(x, y)
     const clickedCard = cards.value.find(card => {
-      return worldPos.x >= card.position.x &&
-             worldPos.x <= card.position.x + card.size.width &&
-             worldPos.y >= card.position.y &&
-             worldPos.y <= card.position.y + card.size.height
+      return (
+        worldPos.x >= card.position.x &&
+        worldPos.x <= card.position.x + card.size.width &&
+        worldPos.y >= card.position.y &&
+        worldPos.y <= card.position.y + card.size.height
+      )
     })
 
     if (clickedCard && !isSpacePressed.value) {
@@ -182,14 +176,14 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
         type: 'card',
         cardId: clickedCard.id,
         startPos: { x: event.clientX, y: event.clientY },
-        startCardPos: { ...clickedCard.position }
+        startCardPos: { ...clickedCard.position },
       }
     } else if (isSpacePressed.value || event.button === 1) {
       // 开始拖拽画布
       dragState.value = {
         type: 'canvas',
         startPos: { x, y },
-        startViewport: { ...viewport }
+        startViewport: { ...viewport },
       }
       isDragging.value = true
     } else {
@@ -197,7 +191,7 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
       selectionBox.value = {
         start: { x, y },
         end: { x, y },
-        active: true
+        active: true,
       }
     }
   }
@@ -272,8 +266,10 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
   const fitToCards = () => {
     if (cards.value.length === 0) return
 
-    let minX = Infinity, minY = Infinity
-    let maxX = -Infinity, maxY = -Infinity
+    let minX = Infinity,
+      minY = Infinity
+    let maxX = -Infinity,
+      maxY = -Infinity
 
     cards.value.forEach(card => {
       minX = Math.min(minX, card.position.x)
@@ -334,6 +330,6 @@ export function useWhiteboardInteraction(options: UseWhiteboardInteractionOption
     resetView,
     fitToCards,
     smoothZoom,
-    smoothPan
+    smoothPan,
   }
 }

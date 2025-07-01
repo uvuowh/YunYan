@@ -46,7 +46,7 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
       timestamp: Date.now(),
       before: JSON.parse(JSON.stringify(before)),
       after: JSON.parse(JSON.stringify(after)),
-      description
+      description,
     }
 
     // 添加到历史记录
@@ -101,7 +101,7 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
       description: entry.description,
       timestamp: entry.timestamp,
       isCurrent: index === currentIndex.value,
-      canRevertTo: index <= currentIndex.value
+      canRevertTo: index <= currentIndex.value,
     }))
   }
 
@@ -128,32 +128,17 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
 
   // 便捷方法：记录卡片创建
   const recordCardCreate = (card: WhiteboardCard) => {
-    addHistoryEntry(
-      'create',
-      null,
-      card,
-      `创建卡片: ${card.title || '无标题'}`
-    )
+    addHistoryEntry('create', null, card, `创建卡片: ${card.title || '无标题'}`)
   }
 
   // 便捷方法：记录卡片更新
   const recordCardUpdate = (before: WhiteboardCard, after: WhiteboardCard) => {
-    addHistoryEntry(
-      'update',
-      before,
-      after,
-      `更新卡片: ${after.title || '无标题'}`
-    )
+    addHistoryEntry('update', before, after, `更新卡片: ${after.title || '无标题'}`)
   }
 
   // 便捷方法：记录卡片删除
   const recordCardDelete = (card: WhiteboardCard) => {
-    addHistoryEntry(
-      'delete',
-      card,
-      null,
-      `删除卡片: ${card.title || '无标题'}`
-    )
+    addHistoryEntry('delete', card, null, `删除卡片: ${card.title || '无标题'}`)
   }
 
   // 便捷方法：记录卡片移动
@@ -162,26 +147,14 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
     beforePositions: { [id: string]: { x: number; y: number } },
     afterPositions: { [id: string]: { x: number; y: number } }
   ) => {
-    const description = cardIds.length === 1
-      ? '移动卡片'
-      : `移动 ${cardIds.length} 个卡片`
+    const description = cardIds.length === 1 ? '移动卡片' : `移动 ${cardIds.length} 个卡片`
 
-    addHistoryEntry(
-      'move',
-      beforePositions,
-      afterPositions,
-      description
-    )
+    addHistoryEntry('move', beforePositions, afterPositions, description)
   }
 
   // 便捷方法：记录视口变化
   const recordViewportChange = (before: Viewport, after: Viewport) => {
-    addHistoryEntry(
-      'viewport',
-      before,
-      after,
-      '视图变化'
-    )
+    addHistoryEntry('viewport', before, after, '视图变化')
   }
 
   // 批量操作：开始批量记录
@@ -192,23 +165,18 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
   }>({
     active: false,
     entries: [],
-    description: ''
+    description: '',
   })
 
   const startBatch = (description: string) => {
     batchOperations.value = {
       active: true,
       entries: [],
-      description
+      description,
     }
   }
 
-  const addToBatch = (
-    type: HistoryEntry['type'],
-    before: any,
-    after: any,
-    description: string
-  ) => {
+  const addToBatch = (type: HistoryEntry['type'], before: any, after: any, description: string) => {
     if (!batchOperations.value.active) {
       addHistoryEntry(type, before, after, description)
       return
@@ -218,7 +186,7 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
       type,
       before: JSON.parse(JSON.stringify(before)),
       after: JSON.parse(JSON.stringify(after)),
-      description
+      description,
     })
   }
 
@@ -238,7 +206,7 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
     batchOperations.value = {
       active: false,
       entries: [],
-      description: ''
+      description: '',
     }
   }
 
@@ -246,7 +214,7 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
     batchOperations.value = {
       active: false,
       entries: [],
-      description: ''
+      description: '',
     }
   }
 
@@ -277,6 +245,6 @@ export function useWhiteboardHistory(options: UseWhiteboardHistoryOptions = {}) 
     startBatch,
     addToBatch,
     commitBatch,
-    cancelBatch
+    cancelBatch,
   }
 }
