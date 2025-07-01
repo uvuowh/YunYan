@@ -1,9 +1,9 @@
 // 系统状态管理
 import type {
-    DiskUsageEvent,
-    ErrorEvent,
-    NetworkStatusEvent,
-    SystemInfoResponse,
+  DiskUsageEvent,
+  ErrorEvent,
+  NetworkStatusEvent,
+  SystemInfoResponse,
 } from '@shared/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
