@@ -134,77 +134,33 @@ onMounted(async () => {
   }
 }
 
+.app-layout {
+  @apply min-h-screen bg-gray-50;
+}
+
+.main-content {
+  @apply flex min-h-screen;
+}
+
+.content-area {
+  @apply flex-1 p-6;
+}
+
 /* Dark mode styles */
-[data-theme="dark"] .loading-screen,
-[data-theme="dark"] .error-screen {
+[data-theme='dark'] .loading-screen,
+[data-theme='dark'] .error-screen {
   @apply bg-gray-900;
 }
 
-[data-theme="dark"] .loading-content p {
+[data-theme='dark'] .loading-content p {
   @apply text-gray-400;
 }
 
-[data-theme="dark"] .error-content h2 {
+[data-theme='dark'] .error-content h2 {
   @apply text-gray-100;
 }
 
-[data-theme="dark"] .error-content p {
+[data-theme='dark'] .error-content p {
   @apply text-gray-400;
-}
-</style>
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
 }
 </style>

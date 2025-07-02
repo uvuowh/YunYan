@@ -34,26 +34,6 @@
       "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
     }
   },
-  "permissions": [
-    "core:default",
-    "opener:default",
-    {
-      "identifier": "fs:allow-app-read-recursive",
-      "allow": [
-        {
-          "path": "$APPDATA"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-app-write-recursive",
-      "allow": [
-        {
-          "path": "$APPDATA"
-        }
-      ]
-    }
-  ],
   "bundle": {
     "active": true,
     "targets": "all",

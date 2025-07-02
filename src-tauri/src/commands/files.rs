@@ -1,8 +1,7 @@
 use crate::error::AppError;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileInfo {
