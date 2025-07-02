@@ -1,106 +1,157 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import { computed, onMounted } from 'vue'
+import { AppHeader, Sidebar } from '@/components/layout'
+import { useAppStore } from '@/core/stores/app'
 
-const greetMsg = ref("");
-const name = ref("");
+const appStore = useAppStore()
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
-}
+// Computed properties
+const isReady = computed(() => appStore.isReady)
+const hasError = computed(() => appStore.hasError)
+const error = computed(() => appStore.error)
+
+// Initialize app on mount
+onMounted(async () => {
+  if (!appStore.isInitialized) {
+    await appStore.initialize()
+  }
+})
 </script>
 
 <template>
-  <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
-
-    <div class="row">
-      <a href="https://vitejs.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-      </a>
-      <a href="https://tauri.app" target="_blank">
-        <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
+  <div class="app-layout">
+    <!-- Loading state -->
+    <div v-if="!isReady" class="loading-screen">
+      <div class="loading-content">
+        <div class="loading-spinner">
+          <svg class="animate-spin" width="32" height="32" viewBox="0 0 24 24">
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+              fill="none"
+              stroke-linecap="round"
+              stroke-dasharray="32"
+              stroke-dashoffset="32"
+            >
+              <animate
+                attributeName="stroke-dasharray"
+                dur="2s"
+                values="0 32;16 16;0 32;0 32"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="stroke-dashoffset"
+                dur="2s"
+                values="0;-16;-32;-32"
+                repeatCount="indefinite"
+              />
+            </circle>
+          </svg>
+        </div>
+        <p>Loading YunYan...</p>
+      </div>
     </div>
-    <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
 
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..." />
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
-  </main>
+    <!-- Error state -->
+    <div v-else-if="hasError" class="error-screen">
+      <div class="error-content">
+        <div class="error-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+            />
+          </svg>
+        </div>
+        <h2>Something went wrong</h2>
+        <p>{{ error }}</p>
+        <button @click="appStore.initialize()" class="retry-button">
+          Try Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Main app layout -->
+    <template v-else>
+      <AppHeader />
+      <div class="main-content">
+        <Sidebar />
+        <main class="content-area">
+          <router-view />
+        </main>
+      </div>
+    </template>
+  </div>
 </template>
 
 <style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
+.loading-screen,
+.error-screen {
+  @apply min-h-screen flex items-center justify-center bg-gray-50;
 }
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
+.loading-content,
+.error-content {
+  @apply text-center space-y-4;
 }
 
+.loading-spinner {
+  @apply flex justify-center text-blue-600;
+}
+
+.loading-content p {
+  @apply text-gray-600 text-lg;
+}
+
+.error-icon {
+  @apply flex justify-center text-red-600;
+}
+
+.error-content h2 {
+  @apply text-xl font-semibold text-gray-900;
+}
+
+.error-content p {
+  @apply text-gray-600;
+}
+
+.retry-button {
+  @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark mode styles */
+[data-theme="dark"] .loading-screen,
+[data-theme="dark"] .error-screen {
+  @apply bg-gray-900;
+}
+
+[data-theme="dark"] .loading-content p {
+  @apply text-gray-400;
+}
+
+[data-theme="dark"] .error-content h2 {
+  @apply text-gray-100;
+}
+
+[data-theme="dark"] .error-content p {
+  @apply text-gray-400;
+}
 </style>
-<style>
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
 
 input,
 button {
@@ -156,5 +207,4 @@ button {
     background-color: #0f0f0f69;
   }
 }
-
 </style>
