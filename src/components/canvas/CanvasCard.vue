@@ -1,182 +1,141 @@
 <template>
-  <v-group :config="groupConfig" @dragmove="handleDragMove" @dragend="handleDragEnd" @mouseenter="showAnchors" @mouseleave="hideAnchors">
-    <v-rect :config="rectConfig"></v-rect>
-    <v-text :config="textConfig" @dblclick="handleDblClick"></v-text>
-    <v-circle v-for="anchor in anchors" :key="anchor.name" :config="anchor.config" @click="() => onAnchorClick(anchor.name)"></v-circle>
-  </v-group>
-</template>
-
-<script>
-import { reactive, computed } from 'vue';
-import { useCanvasStore } from '@/store/canvas';
-
-export default {
-  props: {
-    id: { type: [String, Number], required: true },
-    x: { type: Number, required: true },
-    y: { type: Number, required: true },
-    text: { type: String, default: 'New Card' },
-  },
-  emits: ['anchor-click'],
-  setup(props, { emit }) {
-    const canvasStore = useCanvasStore();
-
-    const groupConfig = computed(() => ({
+  <v-group
+    :config="{
+      id: props.id,
       x: props.x,
       y: props.y,
       draggable: true,
-    }));
+    }"
+    @dragend="handleDragEnd"
+    @click="handleClick"
+    @contextmenu="handleContextMenu"
+    @dblclick="handleDblClick"
+    ref="shapeRef"
+  >
+    <v-rect
+      :config="{
+        width: props.width,
+        height: props.height,
+        fill: 'white',
+        stroke: isSelected ? 'blue' : 'black',
+        strokeWidth: isSelected ? 3 : 1,
+        cornerRadius: 10,
+        shadowColor: 'black',
+        shadowBlur: 10,
+        shadowOpacity: 0.3,
+        shadowOffsetX: 5,
+        shadowOffsetY: 5,
+      }"
+    />
+    <v-text
+        ref="textNodeRef"
+        :config="{
+            text: props.text,
+            width: props.width,
+            height: props.height,
+            padding: 20,
+            fontSize: 16,
+            fontFamily: 'Arial',
+            fill: 'black',
+            align: 'left',
+            verticalAlign: 'top',
+            visible: !textEditActive
+        }"
+    />
+  </v-group>
+  <template v-if="textEditActive">
+    <foreignObject :x="props.x" :y="props.y" :width="props.width" :height="props.height">
+        <body xmlns="http://www.w3.org/1999/xhtml">
+            <textarea
+                :value="props.text"
+                @blur="handleTextareaBlur"
+                :style="{
+                    position: 'absolute',
+                    top: '0px',
+                    left: '0px',
+                    width: `${props.width}px`,
+                    height: `${props.height}px`,
+                    padding: '20px',
+                    fontSize: '16px',
+                    fontFamily: 'Arial',
+                    border: 'none',
+                    outline: 'none',
+                    resize: 'none',
+                    background: 'none',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                }"
+                autofocus
+            ></textarea>
+        </body>
+    </foreignObject>
+  </template>
+</template>
 
-    const rectConfig = reactive({
-      width: 150,
-      height: 100,
-      fill: 'white',
-      stroke: 'black',
-      strokeWidth: 2,
-      cornerRadius: 10,
-      shadowColor: 'black',
-      shadowBlur: 10,
-      shadowOpacity: 0.3,
-      shadowOffsetX: 5,
-      shadowOffsetY: 5,
+<script setup lang="ts">
+import { useCanvasStore } from '@/store/canvas';
+import { computed, ref, watch } from 'vue';
+import Konva from 'konva';
+
+const props = defineProps<{
+  id: number;
+  x: number;
+  y: number;
+  text: string;
+  width: number;
+  height: number;
+}>();
+
+const emit = defineEmits<{
+  (e: 'dragend', value: { id: number; x: number; y: number }): void;
+  (e: 'update:text', value: { id: number; text: string; width: number; height: number }): void;
+}>();
+
+const store = useCanvasStore();
+
+const isSelected = computed(() => store.selectedCardId === props.id);
+
+const shapeRef = ref<Konva.Group | null>(null);
+const textNodeRef = ref<Konva.Text | null>(null);
+
+const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+  emit('dragend', { id: props.id, x: e.target.x(), y: e.target.y() });
+};
+
+const handleClick = () => {
+  store.selectCard(props.id);
+};
+
+const handleContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
+  e.evt.preventDefault();
+  store.manageConnection(props.id);
+};
+
+const textEditActive = ref(false);
+
+const handleDblClick = () => {
+  textEditActive.value = true;
+};
+
+const handleTextareaBlur = (e: FocusEvent) => {
+  const textarea = e.target as HTMLTextAreaElement;
+  const textNode = textNodeRef.value;
+  if (textNode) {
+    const newText = textarea.value;
+    // Use Konva to measure text dimensions
+    const tempText = new Konva.Text({
+        text: newText,
+        fontSize: 16,
+        fontFamily: 'Arial',
+        padding: 20,
+        align: 'left',
     });
-
-    const textConfig = computed(() => ({
-      text: props.text,
-      fontSize: 16,
-      padding: 10,
-      width: rectConfig.width,
-      height: rectConfig.height,
-      align: 'left',
-      verticalAlign: 'top',
-    }));
-
-    const handleDragMove = (event) => {
-      emit('update:x', event.target.x());
-      emit('update:y', event.target.y());
-    };
-
-    const handleDragEnd = (event) => {
-      canvasStore.updateCardPosition({
-        id: props.id,
-        x: event.target.x(),
-        y: event.target.y(),
-      });
-    };
-
-    const handleDblClick = (event) => {
-        const textNode = event.target;
-        const stage = textNode.getStage();
-        if (!stage) return;
-
-        const textPosition = textNode.getAbsolutePosition();
-        const stageBox = stage.container().getBoundingClientRect();
-        const areaPosition = {
-            x: stageBox.left + textPosition.x,
-            y: stageBox.top + textPosition.y,
-        };
-
-        const textarea = document.createElement('textarea');
-        document.body.appendChild(textarea);
-
-        textarea.value = textNode.text();
-        textarea.style.position = 'absolute';
-        textarea.style.top = areaPosition.y + 'px';
-        textarea.style.left = areaPosition.x + 'px';
-        textarea.style.width = textNode.width() + 'px';
-        textarea.style.height = textNode.height() + 'px';
-        textarea.style.fontSize = textNode.fontSize() + 'px';
-        textarea.style.border = 'none';
-        textarea.style.padding = '10px';
-        textarea.style.margin = '0px';
-        textarea.style.overflow = 'hidden';
-        textarea.style.background = 'none';
-        textarea.style.outline = 'none';
-        textarea.style.resize = 'none';
-        textarea.style.lineHeight = textNode.lineHeight().toString();
-        textarea.style.fontFamily = textNode.fontFamily();
-        textarea.style.transformOrigin = 'left top';
-        textarea.style.textAlign = textNode.align();
-        textarea.style.color = textNode.fill();
-        const rotation = textNode.getAbsoluteRotation();
-        let transform = '';
-        if (rotation) {
-            transform += 'rotateZ(' + rotation + 'deg)';
-        }
-
-        textarea.style.transform = transform;
-        textarea.focus();
-
-        textNode.hide();
-
-        const handleUpdate = () => {
-            const newText = textarea.value;
-            canvasStore.updateCardText({ id: props.id, text: newText });
-            textNode.show();
-            if(document.body.contains(textarea)){
-                document.body.removeChild(textarea);
-                textarea.removeEventListener('keydown', handleKeydown);
-                textarea.removeEventListener('blur', handleUpdate);
-            }
-        }
-
-        const handleKeydown = (e) => {
-            if ((e.key === 'Enter' && !e.shiftKey) || e.key === 'Escape') {
-                handleUpdate();
-            }
-        }
-
-        textarea.addEventListener('keydown', handleKeydown);
-        textarea.addEventListener('blur', handleUpdate);
-    };
-
-    const anchorsVisible = reactive({ value: false });
-
-    const showAnchors = () => {
-        anchorsVisible.value = true;
-    };
-
-    const hideAnchors = () => {
-        anchorsVisible.value = false;
-    };
-
-    const anchorPoints = {
-        top: { x: 75, y: 0 },
-        right: { x: 150, y: 50 },
-        bottom: { x: 75, y: 100 },
-        left: { x: 0, y: 50 },
-    };
-
-    const anchors = computed(() => {
-        return Object.entries(anchorPoints).map(([name, pos]) => ({
-            name,
-            config: {
-            ...pos,
-            radius: 5,
-            fill: 'blue',
-            stroke: 'white',
-            strokeWidth: 2,
-            visible: anchorsVisible.value,
-            },
-        }));
-    });
-
-    const onAnchorClick = (anchorName) => {
-        emit('anchor-click', { cardId: props.id, anchorName });
-    };
-
-    return {
-        groupConfig,
-        rectConfig,
-        textConfig,
-        handleDragMove,
-        handleDragEnd,
-        handleDblClick,
-        anchors,
-        showAnchors,
-        hideAnchors,
-        onAnchorClick,
-    };
+    const newWidth = tempText.width();
+    const newHeight = tempText.height();
+    emit('update:text', { id: props.id, text: newText, width: newWidth, height: newHeight });
   }
-}
+  textEditActive.value = false;
+};
+
+// ... existing setup code ...
 </script> 

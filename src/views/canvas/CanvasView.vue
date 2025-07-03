@@ -1,176 +1,190 @@
 <template>
-  <div ref="canvasContainer" class="canvas-container" @mousemove="handleMouseMove" @click="handleCanvasClick">
+  <div ref="canvasContainer" class="canvas-container">
     <v-stage
-      ref="stage"
+      ref="stageRef"
       :config="stageConfig"
+      @dragmove="handleStageDrag"
       @wheel="handleWheel"
-      @dblclick="onAddCard"
-      @dragstart="handleDragStart"
-      @dragend="handleDragEnd"
+      @dblclick="handleStageDblClick"
+      @click="handleStageClick"
     >
-      <v-layer>
+      <v-layer ref="layerRef">
+        <!-- Connections -->
+        <v-arrow v-for="conn in renderedConnections" :key="conn.id" :config="conn.config" />
+
+        <!-- Cards -->
         <CanvasCard
           v-for="card in cards"
           :key="card.id"
           :id="card.id"
           :x="card.x"
           :y="card.y"
+          :width="card.width"
+          :height="card.height"
           :text="card.text"
-          @anchor-click="handleAnchorClick"
+          @dragend="handleCardDragEnd"
+          @update:text="handleCardUpdateText"
         />
-        <v-arrow v-for="conn in renderedConnections" :key="conn.id" :config="conn" />
-        <v-arrow v-if="tempLine.visible" :config="tempLine.config" />
       </v-layer>
     </v-stage>
   </div>
 </template>
 
-<script>
-import { onMounted, onUnmounted, ref, reactive, computed } from 'vue';
-import { useCanvasStore } from '@/store/canvas';
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useCanvasStore, type Card } from '@/store/canvas';
 import { storeToRefs } from 'pinia';
 import CanvasCard from '@/components/canvas/CanvasCard.vue';
+import Konva from 'konva';
 
-export default {
-  components: {
-    CanvasCard,
-  },
-  setup() {
-    const canvasStore = useCanvasStore();
-    const { cards, connections } = storeToRefs(canvasStore);
+const store = useCanvasStore();
+const { cards, connections } = storeToRefs(store);
 
-    const anchorPoints = {
-      top: { x: 75, y: 0 },
-      right: { x: 150, y: 50 },
-      bottom: { x: 75, y: 100 },
-      left: { x: 0, y: 50 },
-    };
+const canvasContainer = ref<HTMLDivElement | null>(null);
+const stageRef = ref<Konva.Stage | null>(null);
+const layerRef = ref<Konva.Layer | null>(null);
+const stageConfig = ref({
+  width: window.innerWidth,
+  height: window.innerHeight,
+  draggable: true,
+  scale: 1,
+  x: 0,
+  y: 0,
+});
 
-    const canvasContainer = ref(null);
-    const stage = ref(null);
-    
-    const isConnecting = ref(false);
-    const fromAnchor = ref(null);
-    const tempLine = reactive({ visible: false, config: { points: [0,0,0,0], stroke: 'black', strokeWidth: 2 } });
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    stageConfig.value.width = window.innerWidth;
+    stageConfig.value.height = window.innerHeight;
+  });
+});
 
-    const stageConfig = reactive({ width: 800, height: 600, draggable: true, scaleX: 1, scaleY: 1 });
-
-    const handleDragStart = () => { canvasContainer.value.style.cursor = 'grabbing'; };
-    const handleDragEnd = () => { canvasContainer.value.style.cursor = 'grab'; };
-
-    const onAddCard = () => {
-      const stageInstance = stage.value.getStage();
-      const pointer = stageInstance.getRelativePointerPosition();
-      if (pointer) canvasStore.addCard(pointer.x, pointer.y);
-    };
-
-    const handleWheel = (event) => {
-      event.evt.preventDefault();
-      const stageInstance = stage.value.getStage();
-      const oldScale = stageInstance.scaleX();
-      const pointer = stageInstance.getPointerPosition();
-
-      if (!pointer) return;
-
-      const mousePointTo = {
-        x: (pointer.x - stageInstance.x()) / oldScale,
-        y: (pointer.y - stageInstance.y()) / oldScale,
-      };
-
-      const newScale = event.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
-
-      stageConfig.scaleX = newScale;
-      stageConfig.scaleY = newScale;
-
-      const newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      };
-      stageInstance.position(newPos);
-    };
-
-    const handleAnchorClick = (payload) => {
-      if (!isConnecting.value) {
-        isConnecting.value = true;
-        fromAnchor.value = { cardId: payload.cardId, anchor: payload.anchorName };
-        tempLine.visible = true;
-      } else {
-        if (fromAnchor.value) {
-          canvasStore.addConnection(fromAnchor.value, { cardId: payload.cardId, anchor: payload.anchorName });
-        }
-        isConnecting.value = false;
-        fromAnchor.value = null;
-        tempLine.visible = false;
-      }
-    };
-
-    const handleMouseMove = (event) => {
-        if (isConnecting.value && fromAnchor.value) {
-            const stageInstance = stage.value.getStage();
-            const pointer = stageInstance.getRelativePointerPosition();
-            if (!pointer) return;
-
-            const fromCard = cards.value.find(c => c.id === fromAnchor.value.cardId);
-            if (!fromCard) return;
-
-            const startPoint = {
-                x: fromCard.x + anchorPoints[fromAnchor.value.anchor].x,
-                y: fromCard.y + anchorPoints[fromAnchor.value.anchor].y,
-            };
-
-            tempLine.config.points = [startPoint.x, startPoint.y, pointer.x, pointer.y];
-        }
-    };
-
-    const handleCanvasClick = (event) => {
-        if (isConnecting.value && event.target === stage.value.getStage().content) {
-            isConnecting.value = false;
-            fromAnchor.value = null;
-            tempLine.visible = false;
-        }
-    }
-
-    const renderedConnections = computed(() => {
-        return connections.value.map(conn => {
-            const fromCard = cards.value.find(c => c.id === conn.from.cardId);
-            const toCard = cards.value.find(c => c.id === conn.to.cardId);
-            if (!fromCard || !toCard) return { points: [] };
-            const fromPoint = { x: fromCard.x + anchorPoints[conn.from.anchor].x, y: fromCard.y + anchorPoints[conn.from.anchor].y };
-            const toPoint = { x: toCard.x + anchorPoints[conn.to.anchor].x, y: toCard.y + anchorPoints[conn.to.anchor].y };
-            return {
-                id: conn.id,
-                points: [fromPoint.x, fromPoint.y, toPoint.x, toPoint.y],
-                stroke: 'black',
-                strokeWidth: 2,
-                pointerLength: 10,
-                pointerWidth: 10,
-            };
-        });
-    });
-
-    const updateStageSize = () => {
-        if (canvasContainer.value) {
-            stageConfig.width = canvasContainer.value.clientWidth;
-            stageConfig.height = canvasContainer.value.clientHeight;
-        }
-    };
-
-    onMounted(() => {
-        updateStageSize();
-        window.addEventListener('resize', updateStageSize);
-    });
-
-    onUnmounted(() => {
-        window.removeEventListener('resize', updateStageSize);
-    });
-    
-    return {
-        canvasContainer, stage, stageConfig, cards, tempLine,
-        handleWheel, onAddCard, handleDragStart, handleDragEnd,
-        handleAnchorClick, handleMouseMove, handleCanvasClick, renderedConnections,
-    };
-  },
+const handleStageDrag = (e: Konva.KonvaEventObject<DragEvent>) => {
+  if (e.target.getType() === 'Stage') {
+    stageConfig.value.x = e.target.x();
+    stageConfig.value.y = e.target.y();
+  }
 };
+
+const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+  e.evt.preventDefault();
+  const scaleBy = 1.1;
+  const stage = stageRef.value?.getStage();
+  if (!stage) return;
+
+  const oldScale = stage.scaleX();
+  const pointer = stage.getPointerPosition();
+
+  if (!pointer) return;
+
+  const mousePointTo = {
+    x: (pointer.x - stage.x()) / oldScale,
+    y: (pointer.y - stage.y()) / oldScale,
+  };
+
+  const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+  stageConfig.value.scale = newScale;
+  stageConfig.value.x = pointer.x - mousePointTo.x * newScale;
+  stageConfig.value.y = pointer.y - mousePointTo.y * newScale;
+
+  stage.scale({ x: newScale, y: newScale });
+  stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
+  stage.batchDraw();
+};
+
+const handleStageDblClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  if (e.target.getType() === 'Stage') {
+    const stage = e.target.getStage();
+    const pos = stage.getPointerPosition();
+    if (pos) {
+      const { x, y } = stage.getRelativePointerPosition();
+      store.addCard(x, y);
+    }
+  }
+};
+
+const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (e.target.getType() === 'Stage') {
+        store.selectCard(null);
+    }
+};
+
+const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) => {
+  store.updateCardPosition({ id, x, y });
+};
+
+const handleCardUpdateText = (payload: { id: number; text: string; width: number; height: number; }) => {
+    store.updateCardText(payload);
+};
+
+function getEdgePoint(fromCard: Card, toCard: Card) {
+    const fromX = fromCard.x + fromCard.width / 2;
+    const fromY = fromCard.y + fromCard.height / 2;
+    const toX = toCard.x + toCard.width / 2;
+    const toY = toCard.y + toCard.height / 2;
+
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+
+    const tan_angle = Math.abs(dy / dx);
+    const tan_rect = fromCard.height / fromCard.width;
+
+    let edgeX, edgeY;
+
+    if (tan_angle < tan_rect) {
+        edgeX = fromX + (dx > 0 ? fromCard.width / 2 : -fromCard.width / 2);
+        edgeY = fromY + dy * (Math.abs(fromCard.width / 2) / Math.abs(dx));
+    } else {
+        edgeX = fromX + dx * (Math.abs(fromCard.height / 2) / Math.abs(dy));
+        edgeY = fromY + (dy > 0 ? fromCard.height / 2 : -fromCard.height / 2);
+    }
+    return { x: edgeX, y: edgeY };
+}
+
+
+const renderedConnections = computed(() => {
+    const result: { id: string, config: any }[] = [];
+    connections.value.forEach(conn => {
+        const card1 = cards.value.find(c => c.id === conn.id1);
+        const card2 = cards.value.find(c => c.id === conn.id2);
+
+        if (!card1 || !card2) return;
+        
+        const p1 = getEdgePoint(card1, card2);
+        const p2 = getEdgePoint(card2, card1);
+
+        const baseConfig = {
+            stroke: 'black',
+            strokeWidth: 2,
+            fill: 'black',
+            pointerLength: 10,
+            pointerWidth: 10,
+        };
+
+        if (conn.direction === '1->2') {
+            result.push({
+                id: `${conn.id}-12`,
+                config: { ...baseConfig, points: [p1.x, p1.y, p2.x, p2.y] }
+            });
+        } else if (conn.direction === '2->1') {
+             result.push({
+                id: `${conn.id}-21`,
+                config: { ...baseConfig, points: [p2.x, p2.y, p1.x, p1.y] }
+            });
+        } else if (conn.direction === 'both') {
+            result.push({
+                id: `${conn.id}-12`,
+                config: { ...baseConfig, points: [p1.x, p1.y, p2.x, p2.y] }
+            });
+            result.push({
+                id: `${conn.id}-21`,
+                config: { ...baseConfig, points: [p2.x, p2.y, p1.x, p1.y] }
+            });
+        }
+    });
+    return result;
+});
 </script>
 
 <style scoped>
