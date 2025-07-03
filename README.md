@@ -1,153 +1,148 @@
 # YunYan
 
-A modern desktop application built with Tauri, Vue 3, and TypeScript, featuring a clean and scalable architecture.
+A modern desktop application built with Tauri, Vue 3, and TypeScript, featuring a powerful canvas-based whiteboard interface and block-based file system.
 
 ## 🚀 Features
 
-- **Modern Tech Stack**: Tauri + Vue 3 + TypeScript + Vite
+- **Canvas Whiteboard**: Interactive whiteboard with nodes, connections, and grid-based layout
+- **Block-based File System**: Efficient file management with block-based architecture
+- **Modern Tech Stack**: Built with Tauri + Vue 3 + TypeScript + Vite
+- **Responsive Design**: Optimized for desktop with mobile-friendly responsive layout
+- **Dark Mode Support**: Complete dark/light theme system
+- **Maple Mono Font**: Optimized typography for Chinese characters and code
+- **Real-time Interaction**: Smooth drag-and-drop, zooming, and panning
 - **Type Safety**: Full TypeScript coverage with strict type checking
-- **State Management**: Pinia for reactive state management
-- **Routing**: Vue Router with lazy loading
-- **UI Components**: Custom component library with dark mode support
-- **Styling**: SCSS with design system variables
-- **Development Tools**: ESLint, Prettier, and VSCode configuration
+
+## 🏗️ Architecture
+
+### Frontend (Vue 3 + TypeScript)
+
+- **Components**: Modular UI components with canvas nodes, infinite grid, and layout elements
+- **Views**: Dashboard, Canvas whiteboard, Files, and Settings pages
+- **State Management**: Pinia stores for application state and user preferences
+- **Styling**: SCSS with design system variables and Maple Mono font integration
+
+### Backend (Tauri + Rust)
+
+- **Commands**: IPC handlers for system operations and file management
+- **Models**: Shared data structures between frontend and backend
+- **Error Handling**: Centralized error management with custom types
 
 ## 📁 Project Structure
 
 ```
 yunyan/
 ├── src/                          # Frontend source code
-│   ├── assets/                   # Static assets
-│   │   └── scss/                 # Global styles and design system
-│   │       ├── _variables.scss   # Design tokens and CSS variables
-│   │       └── index.scss        # Global styles and utilities
-│   ├── components/               # Reusable Vue components
-│   │   ├── ui/                   # Basic UI components
-│   │   │   ├── Button.vue        # Button component with variants
-│   │   │   ├── Input.vue         # Form input component
-│   │   │   ├── Card.vue          # Card container component
-│   │   │   └── index.ts          # Component exports
-│   │   └── layout/               # Layout components
-│   │       ├── AppHeader.vue     # Application header
-│   │       ├── Sidebar.vue       # Navigation sidebar
-│   │       └── index.ts          # Layout exports
-│   ├── core/                     # Core application modules
-│   │   ├── api/                  # API layer
-│   │   │   ├── tauri/            # Tauri IPC wrappers
-│   │   │   │   ├── system.ts     # System information API
-│   │   │   │   ├── files.ts      # File operations API
-│   │   │   │   └── types.ts      # Shared type definitions
-│   │   │   ├── http.ts           # HTTP client for external APIs
-│   │   │   └── index.ts          # API exports
-│   │   ├── stores/               # Pinia state stores
-│   │   │   ├── app.ts            # Application global state
-│   │   │   ├── user.ts           # User state and preferences
-│   │   │   └── index.ts          # Store exports and initialization
+│   ├── assets/
+│   │   ├── scss/                 # Design system and global styles
+│   │   └── resources/            # Fonts and static resources
+│   ├── components/
+│   │   ├── ui/                   # Reusable UI components
+│   │   ├── layout/               # App header and sidebar
+│   │   └── canvas/               # Canvas-specific components
+│   ├── core/
+│   │   ├── api/                  # Tauri IPC and HTTP wrappers
+│   │   ├── stores/               # Pinia state management
 │   │   ├── hooks/                # Vue composables
-│   │   │   ├── useAsync.ts       # Async operation handling
-│   │   │   └── index.ts          # Hook exports
-│   │   ├── utils/                # Utility functions
-│   │   │   ├── platform.ts       # Platform detection utilities
-│   │   │   └── index.ts          # Utility exports
-│   │   └── index.ts              # Core module exports
-│   ├── router/                   # Vue Router configuration
-│   │   └── index.ts              # Route definitions and guards
+│   │   └── utils/                # Utility functions
 │   ├── views/                    # Page components
-│   │   ├── Dashboard.vue         # Dashboard page
-│   │   ├── Files.vue             # File management page
-│   │   └── Settings.vue          # Settings page
+│   ├── router/                   # Vue Router configuration
 │   ├── App.vue                   # Root application component
-│   ├── main.ts                   # Application entry point
-│   └── vite-env.d.ts            # Vite environment types
-├── src-tauri/                    # Tauri backend
-│   ├── src/                      # Rust source code
-│   │   ├── commands/             # Tauri command handlers
-│   │   │   ├── system.rs         # System information commands
-│   │   │   ├── files.rs          # File operation commands
-│   │   │   └── mod.rs            # Command module exports
-│   │   ├── models/               # Shared data structures
-│   │   │   ├── system.rs         # System information models
-│   │   │   ├── user.rs           # User data models
-│   │   │   └── mod.rs            # Model exports
-│   │   ├── error.rs              # Error handling and types
-│   │   ├── lib.rs                # Library entry point
-│   │   └── main.rs               # Application entry point
-│   ├── tauri.conf.json           # Tauri configuration
-│   ├── Cargo.toml                # Rust dependencies
-│   └── build.rs                  # Build script
-├── .vscode/                      # VSCode configuration
-│   └── settings.json             # Editor settings
-├── .eslintrc.js                  # ESLint configuration
-├── .prettierrc                   # Prettier configuration
-├── tsconfig.json                 # TypeScript configuration
-├── vite.config.ts                # Vite configuration
-├── package.json                  # Node.js dependencies
-└── README.md                     # Project documentation
+│   └── main.ts                   # Application entry point
+└── src-tauri/                    # Tauri backend
+    ├── src/
+    │   ├── commands/             # Tauri command handlers
+    │   ├── models/               # Data models
+    │   └── error.rs              # Error handling
+    └── tauri.conf.json           # Tauri configuration
 ```
-
-## 🏗️ Architecture Overview
-
-### Backend (Tauri/Rust)
-
-- **Commands**: IPC handlers for frontend-backend communication
-- **Models**: Shared data structures between frontend and backend
-- **Error Handling**: Centralized error management with custom types
-
-### Frontend (Vue 3/TypeScript)
-
-- **Core Layer**: Reusable utilities, API wrappers, and state management
-- **Component Layer**: UI components organized by complexity (ui/layout)
-- **View Layer**: Page-level components connected to routing
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and pnpm
-- Rust 1.70+
-- Platform-specific dependencies for Tauri
+- **Node.js** 18+ and **pnpm**
+- **Rust** 1.70+
+- **Tauri CLI**: `cargo install tauri-cli`
+- Platform-specific dependencies for Tauri development
 
 ### Installation
 
-```bash
-# Install frontend dependencies
-pnpm install
+1. **Clone the repository**
 
-# Install Tauri CLI (if not already installed)
-cargo install tauri-cli
+   ```bash
+   git clone <repository-url>
+   cd YunYan
+   ```
 
-# Run in development mode
-pnpm tauri dev
+2. **Install dependencies**
 
-# Build for production
-pnpm tauri build
-```
+   ```bash
+   pnpm install
+   ```
+
+3. **Run in development mode**
+
+   ```bash
+   pnpm tauri dev
+   ```
+
+4. **Build for production**
+   ```bash
+   pnpm tauri build
+   ```
+
+## 🎨 Key Features
+
+### Canvas Whiteboard
+
+- **Interactive Nodes**: Create, edit, and connect nodes with drag-and-drop
+- **Infinite Grid**: Smooth panning and zooming with grid snapping
+- **Node Types**: Support for text, notes, and image nodes
+- **Connections**: Visual connections between nodes with different types
+- **Grid Alignment**: Optimized for Chinese characters with Maple Mono font
+
+### Modern UI/UX
+
+- **Responsive Layout**: Mobile-friendly design with collapsible sidebar
+- **Dark Mode**: Complete theme system with smooth transitions
+- **Typography**: Maple Mono font optimized for code and Chinese characters
+- **Smooth Interactions**: Optimized drag thresholds and mouse handling
 
 ## 🛠️ Development
 
 ### Code Style
 
-- ESLint + Prettier for code formatting
-- TypeScript strict mode enabled
-- Vue 3 Composition API preferred
+- **ESLint + Prettier**: Automated code formatting and linting
+- **TypeScript**: Strict mode enabled for maximum type safety
+- **Vue 3 Composition API**: Modern Vue development patterns
+- **SCSS**: Organized styling with design system variables
 
 ### Adding New Features
 
-1. Create feature module in `src/features/`
-2. Add Tauri commands in `src-tauri/src/commands/`
-3. Define shared types in both frontend and backend
-4. Add routes and navigation
+1. **Canvas Components**: Add new node types in `src/components/canvas/`
+2. **UI Components**: Create reusable components in `src/components/ui/`
+3. **Backend Commands**: Add Tauri commands in `src-tauri/src/commands/`
+4. **State Management**: Extend Pinia stores in `src/core/stores/`
+5. **Views**: Add new pages in `src/views/`
 
-### Testing
+## 🎯 Roadmap
 
-```bash
-# Run unit tests
-pnpm test
-
-# Run E2E tests
-pnpm test:e2e
-```
+- [ ] Enhanced node types (images, files, links)
+- [ ] Collaborative editing features
+- [ ] Plugin system for extensibility
+- [ ] Advanced file management
+- [ ] Export/import functionality
+- [ ] Performance optimizations
 
 ## 📝 License
 
-This project is licensed under the GPL v3 License.
+This project is licensed under the **GPL v3 License**.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+Built with ❤️ using Tauri, Vue 3, and TypeScript.

@@ -1,5 +1,6 @@
-// Import variables first
+// Import variables and fonts first
 @import 'variables';
+@import 'fonts';
 
 // Reset and base styles
 *,
@@ -24,23 +25,42 @@ body {
   line-height: inherit;
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  transition: background-color var(--transition-base), color var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
 }
 
 // Typography
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   color: var(--color-text-primary);
 }
 
-h1 { font-size: var(--font-size-4xl); }
-h2 { font-size: var(--font-size-3xl); }
-h3 { font-size: var(--font-size-2xl); }
-h4 { font-size: var(--font-size-xl); }
-h5 { font-size: var(--font-size-lg); }
-h6 { font-size: var(--font-size-base); }
+h1 {
+  font-size: var(--font-size-4xl);
+}
+h2 {
+  font-size: var(--font-size-3xl);
+}
+h3 {
+  font-size: var(--font-size-2xl);
+}
+h4 {
+  font-size: var(--font-size-xl);
+}
+h5 {
+  font-size: var(--font-size-lg);
+}
+h6 {
+  font-size: var(--font-size-base);
+}
 
 p {
   margin: 0;
@@ -85,7 +105,9 @@ button {
   }
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: 100%;
   font-weight: inherit;
@@ -102,14 +124,16 @@ input, textarea, select {
 }
 
 // Lists
-ul, ol {
+ul,
+ol {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 // Images
-img, svg {
+img,
+svg {
   display: block;
   vertical-align: middle;
   max-width: 100%;
@@ -330,13 +354,36 @@ table {
 }
 
 .transition-colors {
-  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+// Font rendering optimizations for Maple Mono
+.font-mono,
+code,
+pre,
+.canvas-node,
+.node-content,
+.node-editor {
+  font-family: var(--font-family-mono);
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1;
+  font-variant-ligatures: contextual;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 // App-specific styles
 .app-layout {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'header'
+    'main';
   min-height: 100vh;
   background-color: var(--color-background);
 }
@@ -345,19 +392,64 @@ table {
   display: flex;
   flex: 1;
   overflow: hidden;
+  grid-area: main;
 }
 
 .content-area {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-6);
   background-color: var(--color-background);
+
+  // Responsive padding
+  padding: var(--spacing-responsive-sm);
+
+  @media (min-width: map-get($breakpoints, 'md')) {
+    padding: var(--spacing-responsive-md);
+  }
+
+  @media (min-width: map-get($breakpoints, 'lg')) {
+    padding: var(--spacing-responsive-lg);
+  }
+}
+
+// Dark mode layout adjustments
+[data-theme='dark'] .app-layout {
+  background-color: var(--color-background-dark);
+}
+
+[data-theme='dark'] .content-area {
+  background-color: var(--color-background-dark);
 }
 
 // Scrollbar styling
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: var(--color-background-dark);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary-dark);
 }
 
 ::-webkit-scrollbar-track {
@@ -373,7 +465,7 @@ table {
   background: var(--color-gray-400);
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   ::-webkit-scrollbar-track {
     background: var(--color-gray-800);
   }

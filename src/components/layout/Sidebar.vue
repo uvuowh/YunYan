@@ -49,6 +49,23 @@
           </li>
 
           <li class="nav-item">
+            <router-link to="/canvas" class="nav-link">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="nav-icon"
+              >
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+                />
+              </svg>
+              <span v-if="!isCollapsed" class="nav-label">Canvas</span>
+            </router-link>
+          </li>
+
+          <li class="nav-item">
             <router-link to="/settings" class="nav-link">
               <svg
                 width="20"
@@ -110,7 +127,7 @@ const sidebarClasses = computed(() => {
     'ease-in-out',
   ]
 
-  const widthClasses = isCollapsed.value ? ['w-16'] : ['w-64']
+  const widthClasses = isCollapsed.value ? [] : []
 
   return [...baseClasses, ...widthClasses]
 })
@@ -122,7 +139,39 @@ const toggleCollapse = () => {
 
 <style scoped>
 .sidebar {
-  height: calc(100vh - 64px); /* Subtract header height */
+  height: 100%;
+  min-height: calc(100vh - var(--header-height));
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(229, 231, 235, 0.8);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  width: var(--sidebar-width-collapsed);
+  transition: width var(--transition-base);
+}
+
+.sidebar:not(.w-16) {
+  width: var(--sidebar-width-expanded);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--header-height);
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+  }
+
+  .sidebar:not(.w-16) {
+    transform: translateX(0);
+    width: 280px;
+  }
+
+  .sidebar.w-16 {
+    transform: translateX(-100%);
+  }
 }
 
 .sidebar-content {
@@ -155,6 +204,14 @@ const toggleCollapse = () => {
 
 .nav-item {
   @apply relative;
+}
+
+.nav-link {
+  @apply flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors;
+}
+
+.nav-link.router-link-active {
+  @apply bg-blue-50 text-blue-700 border-r-2 border-blue-600;
 }
 
 .nav-button {
@@ -204,6 +261,14 @@ const toggleCollapse = () => {
 
 [data-theme='dark'] .brand-name {
   @apply text-gray-100;
+}
+
+[data-theme='dark'] .nav-link {
+  @apply text-gray-300 hover:bg-gray-700 hover:text-gray-100;
+}
+
+[data-theme='dark'] .nav-link.router-link-active {
+  @apply bg-blue-900 text-blue-200 border-blue-400;
 }
 
 [data-theme='dark'] .nav-button {

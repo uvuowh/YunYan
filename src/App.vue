@@ -75,8 +75,14 @@ onMounted(async () => {
 
     <!-- Main app layout -->
     <template v-else>
-      <AppHeader />
+      <AppHeader class="app-header-grid" />
       <div class="main-content">
+        <!-- Mobile sidebar overlay -->
+        <div
+          v-if="!appStore.sidebarCollapsed"
+          class="sidebar-overlay"
+          @click="appStore.toggleSidebar()"
+        ></div>
         <Sidebar />
         <main class="content-area">
           <router-view />
@@ -136,14 +142,51 @@ onMounted(async () => {
 
 .app-layout {
   @apply min-h-screen bg-gray-50;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'header'
+    'main';
 }
 
 .main-content {
-  @apply flex min-h-screen;
+  @apply flex;
+  grid-area: main;
+  min-height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
 .content-area {
-  @apply flex-1 p-6;
+  @apply flex-1;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--color-background);
+}
+
+.app-header-grid {
+  grid-area: header;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 30;
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .content-area {
+    padding: var(--spacing-4);
+  }
 }
 
 /* Dark mode styles */

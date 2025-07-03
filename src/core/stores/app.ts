@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { SystemInfo, AppVersion } from '@/core/api/tauri/types'
 import { getSystemInfo, getAppVersion, isDevMode } from '@/core/api'
+import { isTauri } from '@/core/utils/platform'
 
 export const useAppStore = defineStore('app', () => {
   // State
@@ -60,10 +61,12 @@ export const useAppStore = defineStore('app', () => {
 
   const applyTheme = (themeValue: 'light' | 'dark' | 'auto') => {
     const root = document.documentElement
-    
+
     if (themeValue === 'auto') {
       // Use system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const prefersDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches
       root.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
     } else {
       root.setAttribute('data-theme', themeValue)
@@ -74,18 +77,34 @@ export const useAppStore = defineStore('app', () => {
     try {
       setLoading(true)
       clearError()
-      
-      const [sysInfo, version, devMode] = await Promise.all([
-        getSystemInfo(),
-        getAppVersion(),
-        isDevMode(),
-      ])
-      
-      systemInfo.value = sysInfo
-      appVersion.value = version
-      isDev.value = devMode
+
+      // Only fetch system info if running in Tauri environment
+      if (isTauri()) {
+        const [sysInfo, version, devMode] = await Promise.all([
+          getSystemInfo(),
+          getAppVersion(),
+          isDevMode(),
+        ])
+
+        systemInfo.value = sysInfo
+        appVersion.value = version
+        isDev.value = devMode
+      } else {
+        // Provide fallback values for web environment
+        systemInfo.value = {
+          os: 'web',
+          arch: 'unknown',
+          family: 'web',
+        }
+        appVersion.value = {
+          version: '0.1.0',
+          build: 'web',
+        }
+        isDev.value = import.meta.env.DEV
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch system info'
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to fetch system info'
       setError(errorMessage)
       console.error('Failed to fetch system info:', err)
     } finally {
@@ -98,13 +117,13 @@ export const useAppStore = defineStore('app', () => {
 
     try {
       setLoading(true)
-      
+
       // Fetch system information
       await fetchSystemInfo()
-      
+
       // Apply initial theme
       applyTheme(theme.value)
-      
+
       // Listen for system theme changes
       if (theme.value === 'auto') {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -114,10 +133,11 @@ export const useAppStore = defineStore('app', () => {
           }
         })
       }
-      
+
       isInitialized.value = true
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize app'
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to initialize app'
       setError(errorMessage)
       console.error('Failed to initialize app:', err)
     } finally {
@@ -148,12 +168,12 @@ export const useAppStore = defineStore('app', () => {
     sidebarCollapsed,
     theme,
     language,
-    
+
     // Getters
     isReady,
     hasError,
     appTitle,
-    
+
     // Actions
     setLoading,
     setError,

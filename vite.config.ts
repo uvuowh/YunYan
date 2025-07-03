@@ -18,6 +18,7 @@ export default defineConfig(async () => ({
       '@/features': resolve(__dirname, 'src/features'),
       '@/views': resolve(__dirname, 'src/views'),
       '@/assets': resolve(__dirname, 'src/assets'),
+      '@/resources': resolve(__dirname, 'src/assets/resources'),
     },
   },
 

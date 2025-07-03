@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router'
 // Import views
 const Dashboard = () => import('@/views/Dashboard.vue')
 const Files = () => import('@/views/Files.vue')
+const Canvas = () => import('@/views/Canvas.vue')
 const Settings = () => import('@/views/Settings.vue')
 
 // Define routes
@@ -26,6 +27,14 @@ const routes: RouteRecordRaw[] = [
     component: Files,
     meta: {
       title: 'Files',
+    },
+  },
+  {
+    path: '/canvas',
+    name: 'Canvas',
+    component: Canvas,
+    meta: {
+      title: 'Canvas',
     },
   },
   {
