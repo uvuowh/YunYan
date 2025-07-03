@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "YunYan",
+  "productName": "yunyan",
   "version": "0.1.0",
   "identifier": "com.yunyan.app",
   "build": {
@@ -12,26 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "YunYan",
-        "width": 1200,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
-        "resizable": true,
-        "maximizable": true,
-        "minimizable": true,
-        "closable": true,
-        "decorations": true,
-        "alwaysOnTop": false,
-        "fullscreen": false,
-        "focus": true,
-        "transparent": false,
-        "visible": true,
-        "center": true
+        "title": "yunyan",
+        "width": 800,
+        "height": 600
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+      "csp": null
     }
   },
   "bundle": {
@@ -43,11 +30,6 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "publisher": "YunYan Team",
-    "copyright": "Copyright © 2024 YunYan Team. All rights reserved.",
-    "category": "Productivity",
-    "shortDescription": "A modern desktop application built with Tauri and Vue",
-    "longDescription": "YunYan is a powerful desktop application that demonstrates modern architecture patterns using Tauri, Vue 3, and TypeScript."
+    ]
   }
 }
