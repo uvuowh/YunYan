@@ -8,7 +8,7 @@ import Sidebar from '@/components/sidebar/Sidebar.vue';
   <div class="app-container">
     <div class="main-content">
       <nav>
-        <router-link to="/">Home</router-link> |
+        <router-link to="/">Home</router-link>
         <router-link to="/canvas">Canvas</router-link>
       </nav>
       <router-view />
@@ -23,6 +23,8 @@ import Sidebar from '@/components/sidebar/Sidebar.vue';
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-primary);
 }
 
 .main-content {
@@ -33,131 +35,68 @@ import Sidebar from '@/components/sidebar/Sidebar.vue';
 }
 
 nav {
-  padding: 10px;
-  background-color: #f0f0f0;
+  padding: 1rem 1.5rem;
+  background-color: var(--color-bg-nav);
   text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 nav a {
-  font-weight: bold;
-  color: #2c3e50;
-  margin: 0 10px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  margin: 0 1rem;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+nav a:hover {
+  color: var(--color-text-primary);
 }
 
 nav a.router-link-exact-active {
-  color: #42b983;
+  color: var(--color-accent-primary);
+  border-bottom: 2px solid var(--color-accent-primary);
 }
 </style>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
 :root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+  --color-bg-primary: #f8f9fa; /* Off-white main background */
+  --color-bg-secondary: #ffffff; /* White for cards, sidebars */
+  --color-bg-nav: #ffffff;
+  
+  --color-border: #dee2e6; /* Subtle borders */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  --color-text-primary: #212529; /* Almost black for main text */
+  --color-text-secondary: #6c757d; /* Gray for secondary text */
+
+  --color-accent-primary: #42b983; /* Vue green */
+  --color-accent-primary-hover: #36a071;
+  --color-accent-secondary: #0d6efd; /* Bootstrap blue for selection */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
-.container {
+/* Reset and base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
   margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
 }
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
 </style>

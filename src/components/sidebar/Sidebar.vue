@@ -1,7 +1,13 @@
 <template>
   <aside class="sidebar" v-if="selectedCard">
     <div class="sidebar-content">
-      <h2>{{ selectedCard.title }}</h2>
+      <input
+        type="text"
+        v-model="editableTitle"
+        @input="onTitleChange"
+        class="title-input"
+        placeholder="Enter title..."
+      />
       <textarea
         v-model="editableContent"
         @input="onContentChange"
@@ -21,6 +27,7 @@ const store = useCanvasStore();
 const { cards, selectedCardId } = storeToRefs(store);
 
 const editableContent = ref('');
+const editableTitle = ref('');
 
 /**
  * Finds the currently selected card from the store based on selectedCardId.
@@ -38,6 +45,7 @@ const selectedCard = computed(() => {
 watch(selectedCard, (newCard) => {
   if (newCard) {
     editableContent.value = newCard.content;
+    editableTitle.value = newCard.title;
   }
 }, { immediate: true });
 
@@ -45,9 +53,18 @@ watch(selectedCard, (newCard) => {
  * Debounced function to update the card's content in the store.
  * This prevents excessive updates while the user is typing.
  */
-const debouncedUpdate = debounce((newContent: string) => {
+const debouncedContentUpdate = debounce((newContent: string) => {
   if (selectedCard.value) {
     store.updateCard({ id: selectedCard.value.id, content: newContent });
+  }
+}, 300);
+
+/**
+ * Debounced function to update the card's title in the store.
+ */
+const debouncedTitleUpdate = debounce((newTitle: string) => {
+  if (selectedCard.value) {
+    store.updateCard({ id: selectedCard.value.id, title: newTitle });
   }
 }, 300);
 
@@ -59,19 +76,32 @@ const debouncedUpdate = debounce((newContent: string) => {
 const onContentChange = (event: Event) => {
   const newContent = (event.target as HTMLTextAreaElement).value;
   editableContent.value = newContent;
-  debouncedUpdate(newContent);
+  debouncedContentUpdate(newContent);
+};
+
+/**
+ * Handles the input event from the title input field.
+ * It calls the debounced update function to save the title changes.
+ * @param {Event} event The input event from the title input.
+ */
+const onTitleChange = (event: Event) => {
+    const newTitle = (event.target as HTMLInputElement).value;
+    editableTitle.value = newTitle;
+    debouncedTitleUpdate(newTitle);
 };
 </script>
 
 <style scoped>
 .sidebar {
   width: 300px;
-  border-left: 1px solid #e0e0e0;
-  padding: 20px;
-  background-color: #fdfdfd;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-border);
+  padding: 1.5rem;
+  background-color: var(--color-bg-secondary);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition: width 0.2s ease;
 }
 
 .sidebar-content {
@@ -80,21 +110,43 @@ const onContentChange = (event: Event) => {
   flex-direction: column;
 }
 
-h2 {
-  margin-top: 0;
-  font-size: 1.2em;
-  color: #333;
+.title-input {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.5rem 0.25rem;
+  margin: -0.5rem -0.25rem 1rem;
+  width: calc(100% + 0.5rem);
+  border-radius: 4px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+.title-input:focus {
+  outline: none;
+  background-color: var(--color-bg-primary);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 textarea {
   width: 100%;
   flex-grow: 1;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  padding: 10px;
-  font-size: 1em;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
   font-family: inherit;
   resize: none;
   box-sizing: border-box;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--color-accent-secondary);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
 }
 </style> 

@@ -115,6 +115,14 @@ const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) =
   store.updateCard({ id, x, y });
 };
 
+/**
+ * Calculates the exact point on the edge of a card for a connection line.
+ * This ensures lines connect to the card's border, not its center.
+ * It also handles the edge case where cards are at the same position.
+ * @param {Card} fromCard The starting card.
+ * @param {Card} toCard The ending card.
+ * @returns {{x: number, y: number}} The coordinates of the edge point.
+ */
 function getEdgePoint(fromCard: Card, toCard: Card) {
     const fromX = fromCard.x + fromCard.width / 2;
     const fromY = fromCard.y + fromCard.height / 2;
@@ -123,6 +131,11 @@ function getEdgePoint(fromCard: Card, toCard: Card) {
 
     const dx = toX - fromX;
     const dy = toY - fromY;
+    
+    // Guard against division by zero or NaN if cards are at the same position
+    if (dx === 0 && dy === 0) {
+        return { x: fromX, y: fromY };
+    }
 
     const tan_angle = Math.abs(dy / dx);
     const tan_rect = fromCard.height / fromCard.width;
@@ -188,7 +201,7 @@ const renderedConnections = computed(() => {
 .canvas-container {
   width: 100%;
   height: 100%;
-  background-color: #f8f8f8;
+  background-color: var(--color-bg-primary);
   cursor: grab;
 }
 </style> 

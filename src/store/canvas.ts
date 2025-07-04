@@ -93,7 +93,9 @@ export const useCanvasStore = defineStore('canvas', () => {
         existingConnection.direction = isAction1to2 ? '2->1' : '1->2'; // action a->b leaves b->a, action b->a leaves a->b
       }
     }
-    selectedCardId.value = null; // Deselect after action
+    // By not resetting the selectedCardId, we keep the focus on the source
+    // node, allowing for chaining multiple connections from the same node.
+    // selectedCardId.value = null; // Deselect after action
   }
 
   /**

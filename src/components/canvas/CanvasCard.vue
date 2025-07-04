@@ -15,15 +15,15 @@
       :config="{
         width: props.width,
         height: props.height,
-        fill: 'white',
-        stroke: isSelected ? 'blue' : 'black',
-        strokeWidth: isSelected ? 3 : 1,
-        cornerRadius: 10,
-        shadowColor: 'black',
-        shadowBlur: 10,
-        shadowOpacity: 0.3,
-        shadowOffsetX: 5,
-        shadowOffsetY: 5,
+        fill: '#ffffff',
+        stroke: isSelected ? '#0d6efd' : '#dee2e6',
+        strokeWidth: isSelected ? 2 : 1,
+        cornerRadius: 8,
+        shadowColor: '#000000',
+        shadowBlur: 12,
+        shadowOpacity: 0.1,
+        shadowOffsetX: 0,
+        shadowOffsetY: 4,
       }"
     />
     <v-text
@@ -32,10 +32,10 @@
             text: props.title,
             width: props.width,
             height: props.height,
-            padding: 20,
-            fontSize: 16,
-            fontFamily: 'Arial',
-            fill: 'black',
+            padding: 10,
+            fontSize: 14,
+            fontFamily: 'Inter',
+            fill: '#212529',
             align: 'center',
             verticalAlign: 'middle',
             visible: true,
@@ -73,12 +73,15 @@ const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   emit('dragend', { id: props.id, x: e.target.x(), y: e.target.y() });
 };
 
-const handleClick = () => {
-  store.selectCard(props.id);
+const handleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  if (e.evt.button === 0) {
+    store.selectCard(props.id);
+  }
 };
 
 const handleContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
   e.evt.preventDefault();
+  e.cancelBubble = true;
   store.manageConnection(props.id);
 };
 </script> 
