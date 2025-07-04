@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
+import { save, open } from '@tauri-apps/plugin-dialog';
+import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 
 export interface Card {
   id: number;
@@ -15,8 +17,25 @@ export interface Connection {
     id: string;
     id1: number; // Always the smaller ID
     id2: number; // Always the larger ID
-    direction: '1->2' | '2->1' | 'both';
+    direction: '1->2' | '2->1' | 'both' | 'none';
 }
+
+type ConnectionDirection = Connection['direction'];
+
+const transitions: Record<string, Record<ConnectionDirection, ConnectionDirection>> = {
+  '1->2': { // Action from card 1 to 2
+    'none': '1->2',
+    '1->2': 'none',
+    '2->1': 'both',
+    'both': '2->1'
+  },
+  '2->1': { // Action from card 2 to 1
+    'none': '2->1',
+    '1->2': 'both',
+    '2->1': 'none',
+    'both': '1->2'
+  }
+};
 
 export const useCanvasStore = defineStore('canvas', () => {
   const cards = reactive<Card[]>([]);
@@ -44,6 +63,32 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   /**
+   * Removes a card and any connections attached to it.
+   * @param {number} id The ID of the card to remove.
+   */
+  function removeCard(id: number) {
+    const cardIndex = cards.findIndex(c => c.id === id);
+    if (cardIndex === -1) return;
+
+    // Remove the card
+    cards.splice(cardIndex, 1);
+
+    // Remove associated connections
+    const connectionsToRemove = connections.filter(c => c.id1 === id || c.id2 === id);
+    connectionsToRemove.forEach(conn => {
+      const connIndex = connections.indexOf(conn);
+      if (connIndex > -1) {
+        connections.splice(connIndex, 1);
+      }
+    });
+
+    // Clear selection if the removed card was selected
+    if (selectedCardId.value === id) {
+      selectedCardId.value = null;
+    }
+  }
+
+  /**
    * Toggles the selection of a card. If the card is already selected,
    * it gets deselected. Otherwise, it becomes the selected card.
    * @param {number | null} id The ID of the card to select, or null to deselect.
@@ -56,6 +101,12 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
   
+  /**
+   * Manages the connection state between the currently selected card and a target card.
+   * This function implements a state machine to cycle through connection states
+   * (none -> one-way -> two-way -> other-way -> none).
+   * @param {number} targetId The ID of the card being connected to.
+   */
   function manageConnection(targetId: number) {
     const selectedId = selectedCardId.value;
     if (selectedId === null || selectedId === targetId) return;
@@ -64,34 +115,24 @@ export const useCanvasStore = defineStore('canvas', () => {
     const id2 = Math.max(selectedId, targetId);
     
     const existingConnection = connections.find(c => c.id1 === id1 && c.id2 === id2);
+    const currentDirection = existingConnection?.direction ?? 'none';
+    const action = selectedId === id1 ? '1->2' : '2->1';
 
-    if (!existingConnection) {
-      // Rule 1: No connection -> Create a --> b
+    const nextDirection = transitions[action][currentDirection];
+
+    if (nextDirection === 'none') {
+      if (existingConnection) {
+        connections.splice(connections.indexOf(existingConnection), 1);
+      }
+    } else if (existingConnection) {
+      existingConnection.direction = nextDirection;
+    } else {
       connections.push({
         id: `${id1}-${id2}`,
         id1,
         id2,
-        direction: selectedId === id1 ? '1->2' : '2->1',
+        direction: nextDirection,
       });
-    } else {
-      const isAction1to2 = selectedId === id1;
-      
-      if (existingConnection.direction === '1->2' && isAction1to2) {
-        // Rule 2: a --> b exists, action is a->b -> remove
-        connections.splice(connections.indexOf(existingConnection), 1);
-      } else if (existingConnection.direction === '2->1' && !isAction1to2) {
-        // Rule 2: b --> a exists, action is b->a -> remove
-        connections.splice(connections.indexOf(existingConnection), 1);
-      } else if (existingConnection.direction === '2->1' && isAction1to2) {
-        // Rule 3: b --> a exists, action is a->b -> upgrade to a <--> b
-        existingConnection.direction = 'both';
-      } else if (existingConnection.direction === '1->2' && !isAction1to2) {
-        // Rule 3: a --> b exists, action is b->a -> upgrade to a <--> b
-        existingConnection.direction = 'both';
-      } else if (existingConnection.direction === 'both') {
-        // Rule 4: a <--> b exists -> downgrade
-        existingConnection.direction = isAction1to2 ? '2->1' : '1->2'; // action a->b leaves b->a, action b->a leaves a->b
-      }
     }
     // By not resetting the selectedCardId, we keep the focus on the source
     // node, allowing for chaining multiple connections from the same node.
@@ -111,9 +152,70 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
+  /**
+   * Resets the canvas to a blank state.
+   */
+  function clearCanvas() {
+    cards.splice(0, cards.length);
+    connections.splice(0, connections.length);
+    selectedCardId.value = null;
+    nextCardId = 0;
+  }
+
+  /**
+   * Saves the current canvas state to a JSON file.
+   */
+  async function saveToFile() {
+    try {
+      const filePath = await save({
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        defaultPath: 'canvas.json'
+      });
+      if (!filePath) return;
+
+      const state = {
+        cards: Array.from(cards),
+        connections: Array.from(connections),
+      };
+      await writeTextFile(filePath, JSON.stringify(state, null, 2));
+      console.log(`Saved to ${filePath}`);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+    }
+  }
+
+  /**
+   * Opens a JSON file and restores the canvas state.
+   */
+  async function openFromFile() {
+    try {
+      const filePath = await open({
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        multiple: false,
+      });
+      if (!filePath) return;
+
+      const content = await readTextFile(filePath.path);
+      const state = JSON.parse(content);
+
+      if (state.cards && state.connections) {
+        clearCanvas();
+        // Use nextTick if needed, but for raw array replacement it's often fine
+        Object.assign(cards, state.cards);
+        Object.assign(connections, state.connections);
+        
+        // Find the max ID to continue numbering correctly
+        const maxId = Math.max(...state.cards.map((c: Card) => c.id), -1);
+        nextCardId = maxId + 1;
+      }
+    } catch (error) {
+      console.error('Failed to open or parse file:', error);
+    }
+  }
+
   // Initialize with some default data
   addCard(50, 50);
   addCard(250, 150);
 
-  return { cards, connections, selectedCardId, addCard, selectCard, updateCard, manageConnection };
+  return { cards, connections, selectedCardId, addCard, removeCard, selectCard, updateCard, manageConnection, clearCanvas, saveToFile, openFromFile };
 }); 

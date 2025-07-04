@@ -10,7 +10,13 @@
     >
       <v-layer ref="layerRef">
         <!-- Connections -->
-        <v-arrow v-for="conn in renderedConnections" :key="conn.id" :config="conn.config" />
+        <ConnectionLine
+          v-for="{ connection, card1, card2 } in connectionPairs"
+          :key="connection.id"
+          :connection="connection"
+          :card1="card1"
+          :card2="card2"
+        />
 
         <!-- Cards -->
         <CanvasCard
@@ -34,6 +40,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useCanvasStore, type Card } from '@/store/canvas';
 import { storeToRefs } from 'pinia';
 import CanvasCard from '@/components/canvas/CanvasCard.vue';
+import ConnectionLine from '@/components/canvas/ConnectionLine.vue';
 import Konva from 'konva';
 
 const store = useCanvasStore();
@@ -115,85 +122,15 @@ const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) =
   store.updateCard({ id, x, y });
 };
 
-/**
- * Calculates the exact point on the edge of a card for a connection line.
- * This ensures lines connect to the card's border, not its center.
- * It also handles the edge case where cards are at the same position.
- * @param {Card} fromCard The starting card.
- * @param {Card} toCard The ending card.
- * @returns {{x: number, y: number}} The coordinates of the edge point.
- */
-function getEdgePoint(fromCard: Card, toCard: Card) {
-    const fromX = fromCard.x + fromCard.width / 2;
-    const fromY = fromCard.y + fromCard.height / 2;
-    const toX = toCard.x + toCard.width / 2;
-    const toY = toCard.y + toCard.height / 2;
-
-    const dx = toX - fromX;
-    const dy = toY - fromY;
-    
-    // Guard against division by zero or NaN if cards are at the same position
-    if (dx === 0 && dy === 0) {
-        return { x: fromX, y: fromY };
-    }
-
-    const tan_angle = Math.abs(dy / dx);
-    const tan_rect = fromCard.height / fromCard.width;
-
-    let edgeX, edgeY;
-
-    if (tan_angle < tan_rect) {
-        edgeX = fromX + (dx > 0 ? fromCard.width / 2 : -fromCard.width / 2);
-        edgeY = fromY + dy * (Math.abs(fromCard.width / 2) / Math.abs(dx));
-    } else {
-        edgeX = fromX + dx * (Math.abs(fromCard.height / 2) / Math.abs(dy));
-        edgeY = fromY + (dy > 0 ? fromCard.height / 2 : -fromCard.height / 2);
-    }
-    return { x: edgeX, y: edgeY };
-}
-
-
-const renderedConnections = computed(() => {
-    const result: { id: string, config: any }[] = [];
-    connections.value.forEach(conn => {
-        const card1 = cards.value.find(c => c.id === conn.id1);
-        const card2 = cards.value.find(c => c.id === conn.id2);
-
-        if (!card1 || !card2) return;
-        
-        const p1 = getEdgePoint(card1, card2);
-        const p2 = getEdgePoint(card2, card1);
-
-        const baseConfig = {
-            stroke: 'black',
-            strokeWidth: 2,
-            fill: 'black',
-            pointerLength: 10,
-            pointerWidth: 10,
-        };
-
-        if (conn.direction === '1->2') {
-            result.push({
-                id: `${conn.id}-12`,
-                config: { ...baseConfig, points: [p1.x, p1.y, p2.x, p2.y] }
-            });
-        } else if (conn.direction === '2->1') {
-             result.push({
-                id: `${conn.id}-21`,
-                config: { ...baseConfig, points: [p2.x, p2.y, p1.x, p1.y] }
-            });
-        } else if (conn.direction === 'both') {
-            result.push({
-                id: `${conn.id}-12`,
-                config: { ...baseConfig, points: [p1.x, p1.y, p2.x, p2.y] }
-            });
-            result.push({
-                id: `${conn.id}-21`,
-                config: { ...baseConfig, points: [p2.x, p2.y, p1.x, p1.y] }
-            });
-        }
-    });
-    return result;
+const connectionPairs = computed(() => {
+  return connections.value
+    .map(connection => {
+      const card1 = cards.value.find(c => c.id === connection.id1);
+      const card2 = cards.value.find(c => c.id === connection.id2);
+      if (!card1 || !card2) return null;
+      return { connection, card1, card2 };
+    })
+    .filter(p => p !== null) as { connection: Connection; card1: Card; card2: Card }[];
 });
 </script>
 

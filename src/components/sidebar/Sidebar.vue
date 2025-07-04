@@ -1,14 +1,29 @@
 <template>
   <aside class="sidebar" v-if="selectedCard">
+    <div class="sidebar-header">
+      <h3>Node Properties</h3>
+      <button @click="handleDelete" class="delete-button" aria-label="Delete Node">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </button>
+    </div>
     <div class="sidebar-content">
+      <label for="title-input">Title</label>
       <input
+        id="title-input"
         type="text"
         v-model="editableTitle"
         @input="onTitleChange"
-        class="title-input"
+        class="styled-input"
         placeholder="Enter title..."
       />
+      <label for="content-textarea">Content</label>
       <textarea
+        id="content-textarea"
         v-model="editableContent"
         @input="onContentChange"
         placeholder="Enter content..."
@@ -89,6 +104,16 @@ const onTitleChange = (event: Event) => {
     editableTitle.value = newTitle;
     debouncedTitleUpdate(newTitle);
 };
+
+/**
+ * Handles the click event for the delete button.
+ * It removes the currently selected card from the store.
+ */
+const handleDelete = () => {
+  if (selectedCard.value) {
+    store.removeCard(selectedCard.value.id);
+  }
+};
 </script>
 
 <style scoped>
@@ -104,49 +129,77 @@ const onTitleChange = (event: Event) => {
   transition: width 0.2s ease;
 }
 
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-shrink: 0;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.delete-button {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.delete-button:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
 .sidebar-content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
-.title-input {
-  border: none;
-  background: transparent;
-  font-size: 1.25rem;
-  font-weight: 700;
-  padding: 0.5rem 0.25rem;
-  margin: -0.5rem -0.25rem 1rem;
-  width: calc(100% + 0.5rem);
-  border-radius: 4px;
-  color: var(--color-text-primary);
-  font-family: inherit;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-.title-input:focus {
-  outline: none;
-  background-color: var(--color-bg-primary);
-  box-shadow: inset 0 0 0 1px var(--color-border);
-}
-
-textarea {
-  width: 100%;
-  flex-grow: 1;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 0.75rem;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  font-family: inherit;
-  resize: none;
-  box-sizing: border-box;
-  background-color: var(--color-bg-primary);
+.sidebar-content label {
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--color-text-secondary);
 }
 
+.styled-input,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.styled-input:focus,
 textarea:focus {
   outline: none;
   border-color: var(--color-accent-secondary);
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+textarea {
+  flex-grow: 1;
+  resize: none;
 }
 </style> 
