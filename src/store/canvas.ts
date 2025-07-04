@@ -5,7 +5,8 @@ export interface Card {
   id: number;
   x: number;
   y: number;
-  text: string;
+  title: string;
+  content: string;
   width: number;
   height: number;
 }
@@ -23,11 +24,30 @@ export const useCanvasStore = defineStore('canvas', () => {
   const selectedCardId = ref<number | null>(null);
   let nextCardId = 0;
 
+  /**
+   * Adds a new card to the canvas at the specified coordinates.
+   * The new card is initialized with a default title, content, and size.
+   * @param {number} x The x-coordinate for the new card.
+   * @param {number} y The y-coordinate for the new card.
+   */
   function addCard(x: number, y: number) {
     const newCardId = nextCardId++;
-    cards.push({ id: newCardId, x, y, text: `Card ${newCardId}`, width: 150, height: 100 });
+    cards.push({
+      id: newCardId,
+      x,
+      y,
+      title: `Node ${newCardId}`,
+      content: 'This is the content for the new node.',
+      width: 150,
+      height: 60,
+    });
   }
 
+  /**
+   * Toggles the selection of a card. If the card is already selected,
+   * it gets deselected. Otherwise, it becomes the selected card.
+   * @param {number | null} id The ID of the card to select, or null to deselect.
+   */
   function selectCard(id: number | null) {
     if (selectedCardId.value === id) {
         selectedCardId.value = null; // deselect
@@ -76,37 +96,16 @@ export const useCanvasStore = defineStore('canvas', () => {
     selectedCardId.value = null; // Deselect after action
   }
 
-  function updateCardPosition({ id, x, y }: { id: number, x: number, y: number }) {
+  /**
+   * Updates the properties of a specific card.
+   * This function merges the provided data with the existing card data.
+   * @param {Partial<Card> & { id: number }} payload An object containing the card ID and the properties to update.
+   */
+  function updateCard(payload: Partial<Card> & { id: number }) {
+    const { id, ...data } = payload;
     const card = cards.find(c => c.id === id);
     if (card) {
-      card.x = x;
-      card.y = y;
-    }
-  }
-
-  function updateCardText({ id, text, width, height }: { id: number, text: string, width: number, height: number }) {
-    const card = cards.find(c => c.id === id);
-    if (card) {
-      card.text = text;
-      card.width = width;
-      card.height = height;
-    }
-  }
-
-  function updateCardPositionFull({ id, x, y }: { id: number, x: number, y: number }) {
-    const card = cards.find(c => c.id === id);
-    if (card) {
-      card.x = x;
-      card.y = y;
-    }
-  }
-
-  function updateCardTextFull({ id, text, width, height }: { id: number, text: string, width: number, height: number }) {
-    const card = cards.find(c => c.id === id);
-    if (card) {
-      card.text = text;
-      card.width = width;
-      card.height = height;
+      Object.assign(card, data);
     }
   }
 
@@ -114,5 +113,5 @@ export const useCanvasStore = defineStore('canvas', () => {
   addCard(50, 50);
   addCard(250, 150);
 
-  return { cards, connections, selectedCardId, addCard, selectCard, updateCardPosition: updateCardPositionFull, updateCardText: updateCardTextFull, manageConnection };
+  return { cards, connections, selectedCardId, addCard, selectCard, updateCard, manageConnection };
 }); 

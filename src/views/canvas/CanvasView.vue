@@ -21,9 +21,8 @@
           :y="card.y"
           :width="card.width"
           :height="card.height"
-          :text="card.text"
+          :title="card.title"
           @dragend="handleCardDragEnd"
-          @update:text="handleCardUpdateText"
         />
       </v-layer>
     </v-stage>
@@ -47,7 +46,8 @@ const stageConfig = ref({
   width: window.innerWidth,
   height: window.innerHeight,
   draggable: true,
-  scale: 1,
+  scaleX: 1,
+  scaleY: 1,
   x: 0,
   y: 0,
 });
@@ -84,7 +84,8 @@ const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
 
   const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
 
-  stageConfig.value.scale = newScale;
+  stageConfig.value.scaleX = newScale;
+  stageConfig.value.scaleY = newScale;
   stageConfig.value.x = pointer.x - mousePointTo.x * newScale;
   stageConfig.value.y = pointer.y - mousePointTo.y * newScale;
 
@@ -111,11 +112,7 @@ const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
 };
 
 const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) => {
-  store.updateCardPosition({ id, x, y });
-};
-
-const handleCardUpdateText = (payload: { id: number; text: string; width: number; height: number; }) => {
-    store.updateCardText(payload);
+  store.updateCard({ id, x, y });
 };
 
 function getEdgePoint(fromCard: Card, toCard: Card) {
@@ -190,7 +187,7 @@ const renderedConnections = computed(() => {
 <style scoped>
 .canvas-container {
   width: 100%;
-  height: calc(100vh - 50px);
+  height: 100%;
   background-color: #f8f8f8;
   cursor: grab;
 }

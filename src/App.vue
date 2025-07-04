@@ -1,19 +1,37 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import Sidebar from '@/components/sidebar/Sidebar.vue';
 </script>
 
 <template>
-  <div>
-    <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/canvas">Canvas</router-link>
-    </nav>
-    <router-view />
+  <div class="app-container">
+    <div class="main-content">
+      <nav>
+        <router-link to="/">Home</router-link> |
+        <router-link to="/canvas">Canvas</router-link>
+      </nav>
+      <router-view />
+    </div>
+    <Sidebar v-if="$route.path.includes('/canvas')" />
   </div>
 </template>
 
 <style scoped>
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 nav {
   padding: 10px;
   background-color: #f0f0f0;
