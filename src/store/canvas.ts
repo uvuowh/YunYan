@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
-import { save, open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs';
 
 export interface Card {
   id: number;
@@ -43,6 +41,16 @@ export const useCanvasStore = defineStore('canvas', () => {
   const selectedCardId = ref<number | null>(null);
   let nextCardId = 0;
 
+  // Mark file as modified when canvas changes
+  function markAsModified() {
+    // This will be called by the file manager store
+    // We'll import it dynamically to avoid circular dependency
+    import('./fileManager').then(({ useFileManagerStore }) => {
+      const fileManager = useFileManagerStore();
+      fileManager.markAsModified();
+    });
+  }
+
   /**
    * Adds a new card to the canvas at the specified coordinates.
    * The new card is initialized with a default title, content, and size.
@@ -60,6 +68,7 @@ export const useCanvasStore = defineStore('canvas', () => {
       width: 150,
       height: 60,
     });
+    markAsModified();
   }
 
   /**
@@ -86,6 +95,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     if (selectedCardId.value === id) {
       selectedCardId.value = null;
     }
+    markAsModified();
   }
 
   /**
@@ -113,7 +123,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 
     const id1 = Math.min(selectedId, targetId);
     const id2 = Math.max(selectedId, targetId);
-    
+
     const existingConnection = connections.find(c => c.id1 === id1 && c.id2 === id2);
     const currentDirection = existingConnection?.direction ?? 'none';
     const action = selectedId === id1 ? '1->2' : '2->1';
@@ -134,6 +144,7 @@ export const useCanvasStore = defineStore('canvas', () => {
         direction: nextDirection,
       });
     }
+    markAsModified();
     // By not resetting the selectedCardId, we keep the focus on the source
     // node, allowing for chaining multiple connections from the same node.
     // selectedCardId.value = null; // Deselect after action
@@ -149,6 +160,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     const card = cards.find(c => c.id === id);
     if (card) {
       Object.assign(card, data);
+      markAsModified();
     }
   }
 
@@ -162,60 +174,11 @@ export const useCanvasStore = defineStore('canvas', () => {
     nextCardId = 0;
   }
 
-  /**
-   * Saves the current canvas state to a JSON file.
-   */
-  async function saveToFile() {
-    try {
-      const filePath = await save({
-        filters: [{ name: 'JSON', extensions: ['json'] }],
-        defaultPath: 'canvas.json'
-      });
-      if (!filePath) return;
 
-      const state = {
-        cards: Array.from(cards),
-        connections: Array.from(connections),
-      };
-      await writeTextFile(filePath, JSON.stringify(state, null, 2));
-      console.log(`Saved to ${filePath}`);
-    } catch (error) {
-      console.error('Failed to save file:', error);
-    }
-  }
-
-  /**
-   * Opens a JSON file and restores the canvas state.
-   */
-  async function openFromFile() {
-    try {
-      const filePath = await open({
-        filters: [{ name: 'JSON', extensions: ['json'] }],
-        multiple: false,
-      });
-      if (!filePath) return;
-
-      const content = await readTextFile(filePath.path);
-      const state = JSON.parse(content);
-
-      if (state.cards && state.connections) {
-        clearCanvas();
-        // Use nextTick if needed, but for raw array replacement it's often fine
-        Object.assign(cards, state.cards);
-        Object.assign(connections, state.connections);
-        
-        // Find the max ID to continue numbering correctly
-        const maxId = Math.max(...state.cards.map((c: Card) => c.id), -1);
-        nextCardId = maxId + 1;
-      }
-    } catch (error) {
-      console.error('Failed to open or parse file:', error);
-    }
-  }
 
   // Initialize with some default data
   addCard(50, 50);
   addCard(250, 150);
 
-  return { cards, connections, selectedCardId, addCard, removeCard, selectCard, updateCard, manageConnection, clearCanvas, saveToFile, openFromFile };
+  return { cards, connections, selectedCardId, nextCardId, addCard, removeCard, selectCard, updateCard, manageConnection, clearCanvas };
 }); 

@@ -1,15 +1,16 @@
 <template>
   <div class="file-menu">
-    <button @click="store.clearCanvas" class="menu-button">New</button>
-    <button @click="store.openFromFile" class="menu-button">Open</button>
-    <button @click="store.saveToFile" class="menu-button">Save</button>
+    <button @click="fileManager.newFile" class="menu-button">New</button>
+    <button @click="fileManager.openFile" class="menu-button" :disabled="fileManager.isLoading">Open</button>
+    <button @click="fileManager.saveFile" class="menu-button" :disabled="fileManager.isLoading">Save</button>
+    <button @click="fileManager.saveAsFile" class="menu-button" :disabled="fileManager.isLoading">Save As</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useCanvasStore } from '@/store/canvas';
+import { useFileManagerStore } from '@/store/fileManager';
 
-const store = useCanvasStore();
+const fileManager = useFileManagerStore();
 </script>
 
 <style scoped>

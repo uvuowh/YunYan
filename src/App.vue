@@ -2,18 +2,19 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import Sidebar from '@/components/sidebar/Sidebar.vue';
-import FileMenu from '@/components/menu/FileMenu.vue';
+import FileSidebar from '@/components/sidebar/FileSidebar.vue';
 </script>
 
 <template>
   <div class="app-container">
+    <FileSidebar v-if="$route.path.includes('/canvas')" />
     <div class="main-content">
       <nav>
         <div class="nav-links">
           <router-link to="/">Home</router-link>
           <router-link to="/canvas">Canvas</router-link>
         </div>
-        <FileMenu v-if="$route.path.includes('/canvas')" />
+
       </nav>
       <router-view />
     </div>
@@ -32,7 +33,8 @@ import FileMenu from '@/components/menu/FileMenu.vue';
 }
 
 .main-content {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0; /* 防止flex子元素溢出 */
   display: flex;
   flex-direction: column;
   overflow: hidden;

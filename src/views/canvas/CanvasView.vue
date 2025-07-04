@@ -3,10 +3,13 @@
     <v-stage
       ref="stageRef"
       :config="stageConfig"
-      @dragmove="handleStageDrag"
       @wheel="handleWheel"
       @dblclick="handleStageDblClick"
       @click="handleStageClick"
+      @mousedown="handleMouseDown"
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
+      @mouseleave="handleMouseUp"
     >
       <v-layer ref="layerRef">
         <!-- Connections -->
@@ -52,12 +55,16 @@ const layerRef = ref<Konva.Layer | null>(null);
 const stageConfig = ref({
   width: window.innerWidth,
   height: window.innerHeight,
-  draggable: true,
+  draggable: false, // 禁用默认拖拽，我们将手动处理
   scaleX: 1,
   scaleY: 1,
   x: 0,
   y: 0,
 });
+
+// 画布拖拽状态
+const isDragging = ref(false);
+const lastPointerPosition = ref({ x: 0, y: 0 });
 
 onMounted(() => {
   window.addEventListener('resize', () => {
@@ -66,38 +73,101 @@ onMounted(() => {
   });
 });
 
-const handleStageDrag = (e: Konva.KonvaEventObject<DragEvent>) => {
-  if (e.target.getType() === 'Stage') {
-    stageConfig.value.x = e.target.x();
-    stageConfig.value.y = e.target.y();
+// 鼠标按下事件 - 检测中键拖拽
+const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const stage = stageRef.value?.getStage();
+  if (!stage) return;
+
+  // 中键（滚轮按钮）拖拽画布
+  if (e.evt.button === 1 && e.target.getType() === 'Stage') {
+    e.evt.preventDefault();
+    isDragging.value = true;
+    const pos = stage.getPointerPosition();
+    if (pos) {
+      lastPointerPosition.value = pos;
+    }
+    // 改变鼠标样式
+    stage.container().style.cursor = 'grabbing';
+  }
+};
+
+// 鼠标移动事件 - 处理画布拖拽
+const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const stage = stageRef.value?.getStage();
+  if (!stage || !isDragging.value) return;
+
+  const pos = stage.getPointerPosition();
+  if (!pos) return;
+
+  const dx = pos.x - lastPointerPosition.value.x;
+  const dy = pos.y - lastPointerPosition.value.y;
+
+  stageConfig.value.x += dx;
+  stageConfig.value.y += dy;
+
+  stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
+  stage.batchDraw();
+
+  lastPointerPosition.value = pos;
+};
+
+// 鼠标释放事件 - 结束拖拽
+const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const stage = stageRef.value?.getStage();
+  if (!stage) return;
+
+  if (isDragging.value) {
+    isDragging.value = false;
+    // 恢复鼠标样式
+    stage.container().style.cursor = 'grab';
   }
 };
 
 const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
   e.evt.preventDefault();
-  const scaleBy = 1.1;
   const stage = stageRef.value?.getStage();
   if (!stage) return;
 
-  const oldScale = stage.scaleX();
   const pointer = stage.getPointerPosition();
-
   if (!pointer) return;
 
-  const mousePointTo = {
-    x: (pointer.x - stage.x()) / oldScale,
-    y: (pointer.y - stage.y()) / oldScale,
-  };
+  // 检测是否为触控板（通过deltaMode和wheelDelta判断）
+  const isTouchpad = e.evt.deltaMode === 0 && Math.abs(e.evt.deltaY) < 50;
 
-  const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+  // 如果按住Ctrl键或者是触控板的缩放手势，进行缩放
+  if (e.evt.ctrlKey || e.evt.metaKey || (!isTouchpad && Math.abs(e.evt.deltaY) > Math.abs(e.evt.deltaX))) {
+    // 缩放操作
+    const scaleBy = isTouchpad ? 1.02 : 1.1; // 触控板使用更小的缩放步长
+    const oldScale = stage.scaleX();
 
-  stageConfig.value.scaleX = newScale;
-  stageConfig.value.scaleY = newScale;
-  stageConfig.value.x = pointer.x - mousePointTo.x * newScale;
-  stageConfig.value.y = pointer.y - mousePointTo.y * newScale;
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
 
-  stage.scale({ x: newScale, y: newScale });
-  stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
+    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+    // 限制缩放范围
+    const clampedScale = Math.max(0.1, Math.min(5, newScale));
+
+    stageConfig.value.scaleX = clampedScale;
+    stageConfig.value.scaleY = clampedScale;
+    stageConfig.value.x = pointer.x - mousePointTo.x * clampedScale;
+    stageConfig.value.y = pointer.y - mousePointTo.y * clampedScale;
+
+    stage.scale({ x: clampedScale, y: clampedScale });
+    stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
+  } else {
+    // 平移操作（触控板双指滑动）
+    const deltaX = e.evt.deltaX;
+    const deltaY = e.evt.deltaY;
+
+    stageConfig.value.x -= deltaX;
+    stageConfig.value.y -= deltaY;
+
+    stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
+  }
+
   stage.batchDraw();
 };
 
@@ -140,5 +210,18 @@ const connectionPairs = computed(() => {
   height: 100%;
   background-color: var(--color-bg-primary);
   cursor: grab;
+  user-select: none; /* 防止文本选择 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
-</style> 
+
+.canvas-container:active {
+  cursor: grabbing;
+}
+
+/* 优化触控板体验 */
+.canvas-container canvas {
+  touch-action: none; /* 禁用默认触摸行为 */
+}
+</style>

@@ -21,12 +21,7 @@
       "csp": null
     }
   },
-  "plugins": {
-    "dialog": {},
-    "fs": {
-      "scope": ["$APP/*"]
-    }
-  },
+
   "bundle": {
     "active": true,
     "targets": "all",
