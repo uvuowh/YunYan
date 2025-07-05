@@ -15,8 +15,8 @@
       :config="{
         width: props.width,
         height: props.height,
-        fill: '#ffffff',
-        stroke: isSelected ? '#0d6efd' : '#dee2e6',
+        fill: '#fff8e1',
+        stroke: isSelected ? '#0d6efd' : '#ffa726',
         strokeWidth: isSelected ? 2 : 1,
         cornerRadius: 8,
         shadowColor: '#000000',
@@ -26,21 +26,27 @@
         shadowOffsetY: 4,
       }"
     />
+    <!-- 文档标题 - 占据整个节点 -->
     <v-text
         ref="textNodeRef"
         :config="{
-            text: props.title,
-            width: props.width,
-            height: props.height,
-            padding: 10,
-            fontSize: 14,
+            text: truncateTitle(props.title, props.width - 8),
+            x: 4,
+            y: 4,
+            width: props.width - 8,
+            height: props.height - 8,
+            fontSize: Math.min(props.width / 6, props.height / 3, 32),
             fontFamily: 'Inter',
+            fontStyle: 'bold',
             fill: '#212529',
             align: 'center',
             verticalAlign: 'middle',
             visible: true,
+            wrap: 'word',
+            ellipsis: false,
         }"
     />
+
   </v-group>
 </template>
 
@@ -54,8 +60,10 @@ const props = defineProps<{
   x: number;
   y: number;
   title: string;
+  content: string;
   width: number;
   height: number;
+  blockCount?: number;
 }>();
 
 const emit = defineEmits<{
@@ -66,6 +74,23 @@ const store = useCanvasStore();
 
 const isSelected = computed(() => store.selectedCardId === props.id);
 
+/**
+ * 截断标题以适应卡片宽度
+ */
+const truncateTitle = (title: string, maxWidth: number) => {
+  // 计算动态字体大小
+  const fontSize = Math.min(props.width / 6, props.height / 3, 32);
+  // 根据字体大小估算字符宽度
+  const charWidth = fontSize * 0.6; // 字符宽度约为字体大小的60%
+  const maxChars = Math.floor(maxWidth / charWidth);
+  if (title.length <= maxChars) {
+    return title;
+  }
+  return title.substring(0, Math.max(1, maxChars - 3)) + '...';
+};
+
+
+
 const shapeRef = ref<Konva.Group | null>(null);
 const textNodeRef = ref<Konva.Text | null>(null);
 
@@ -75,13 +100,15 @@ const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
 
 const handleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
   if (e.evt.button === 0) {
+    // 左键点击：选择卡片并管理连接
     store.selectCard(props.id);
+    store.manageConnection(props.id);
   }
 };
 
 const handleContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
+  // 禁用右键菜单
   e.evt.preventDefault();
   e.cancelBubble = true;
-  store.manageConnection(props.id);
 };
 </script> 

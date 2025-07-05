@@ -31,6 +31,8 @@
           :width="card.width"
           :height="card.height"
           :title="card.title"
+          :content="card.content"
+          :block-count="card.blocks?.length || 0"
           @dragend="handleCardDragEnd"
         />
       </v-layer>
@@ -39,8 +41,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useCanvasStore, type Card } from '@/store/canvas';
+import { ref, computed, onMounted } from 'vue';
+import { useCanvasStore, type Card, type Connection } from '@/store/canvas';
 import { storeToRefs } from 'pinia';
 import CanvasCard from '@/components/canvas/CanvasCard.vue';
 import ConnectionLine from '@/components/canvas/ConnectionLine.vue';
@@ -92,7 +94,7 @@ const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
 };
 
 // 鼠标移动事件 - 处理画布拖拽
-const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+const handleMouseMove = (_e: Konva.KonvaEventObject<MouseEvent>) => {
   const stage = stageRef.value?.getStage();
   if (!stage || !isDragging.value) return;
 
@@ -112,7 +114,7 @@ const handleMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
 };
 
 // 鼠标释放事件 - 结束拖拽
-const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent>) => {
+const handleMouseUp = (_e: Konva.KonvaEventObject<MouseEvent>) => {
   const stage = stageRef.value?.getStage();
   if (!stage) return;
 
@@ -174,10 +176,13 @@ const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
 const handleStageDblClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
   if (e.target.getType() === 'Stage') {
     const stage = e.target.getStage();
-    const pos = stage.getPointerPosition();
-    if (pos) {
-      const { x, y } = stage.getRelativePointerPosition();
-      store.addCard(x, y);
+    const pos = stage?.getPointerPosition();
+    if (pos && stage) {
+      const relativePos = stage.getRelativePointerPosition();
+      if (relativePos) {
+        const { x, y } = relativePos;
+        store.addCard(x, y);
+      }
     }
   }
 };
@@ -194,13 +199,13 @@ const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) =
 
 const connectionPairs = computed(() => {
   return connections.value
-    .map(connection => {
-      const card1 = cards.value.find(c => c.id === connection.id1);
-      const card2 = cards.value.find(c => c.id === connection.id2);
+    .map((connection: Connection) => {
+      const card1 = cards.value.find((c: Card) => c.id === connection.id1);
+      const card2 = cards.value.find((c: Card) => c.id === connection.id2);
       if (!card1 || !card2) return null;
       return { connection, card1, card2 };
     })
-    .filter(p => p !== null) as { connection: Connection; card1: Card; card2: Card }[];
+    .filter((p: any) => p !== null) as { connection: Connection; card1: Card; card2: Card }[];
 });
 </script>
 

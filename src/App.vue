@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
 import Sidebar from '@/components/sidebar/Sidebar.vue';
-import FileSidebar from '@/components/sidebar/FileSidebar.vue';
 </script>
 
 <template>
   <div class="app-container">
-    <FileSidebar v-if="$route.path.includes('/canvas')" />
     <div class="main-content">
       <nav>
         <div class="nav-links">
