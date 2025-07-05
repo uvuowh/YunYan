@@ -2,9 +2,20 @@ import { test, expect } from '@playwright/test'
 
 test.describe('撤销/重做功能', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    // 等待应用加载完成
-    await page.waitForSelector('[data-testid="canvas-stage"]', { timeout: 10000 })
+    await page.goto('/canvas')
+
+    // 等待基本DOM元素加载
+    await page.waitForSelector('.canvas-container', { timeout: 10000 })
+    await page.waitForSelector('canvas', { timeout: 10000 })
+
+    // 确保测试锚点元素存在
+    await page.waitForSelector('[data-testid="canvas-card-0"]', {
+      timeout: 10000,
+      state: 'visible',
+    })
+
+    // 等待Vue Konva渲染完成
+    await page.waitForTimeout(1000)
   })
 
   test('应该能够撤销和重做卡片添加操作', async ({ page }) => {

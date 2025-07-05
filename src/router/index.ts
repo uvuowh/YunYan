@@ -12,6 +12,11 @@ const routes = [
     name: 'Canvas',
     component: () => import('../views/canvas/CanvasView.vue'),
   },
+  {
+    path: '/test-vue-konva',
+    name: 'VueKonvaTest',
+    component: () => import('../views/test/VueKonvaTest.vue'),
+  },
 ]
 
 const router = createRouter({

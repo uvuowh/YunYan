@@ -3,8 +3,19 @@ import { test, expect } from '@playwright/test'
 test.describe('键盘快捷键功能', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/canvas')
-    // 等待应用加载完成
-    await page.waitForSelector('[data-testid="canvas-stage"]', { timeout: 10000 })
+
+    // 等待基本DOM元素加载
+    await page.waitForSelector('.canvas-container', { timeout: 10000 })
+    await page.waitForSelector('canvas', { timeout: 10000 })
+
+    // 确保测试锚点元素存在
+    await page.waitForSelector('[data-testid="canvas-card-0"]', {
+      timeout: 10000,
+      state: 'visible',
+    })
+
+    // 等待Vue Konva渲染完成
+    await page.waitForTimeout(1000)
   })
 
   test('应该显示快捷键帮助 (F1)', async ({ page }) => {

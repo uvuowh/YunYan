@@ -123,7 +123,20 @@ export const useCanvasStore = defineStore('canvas', () => {
   // 初始化：加载数据和启动自动保存
   function initialize() {
     // 尝试从本地存储加载数据
-    loadFromLocalStorage()
+    const loaded = loadFromLocalStorage()
+
+    // 如果没有加载到数据，创建默认卡片
+    if (!loaded && cards.length === 0) {
+      addCardInternal(50, 50)
+      addCardInternal(250, 150)
+    }
+
+    // 自动调整所有现有卡片的尺寸
+    cards.forEach(card => {
+      const { width, height } = calculateCardSize(card.title)
+      card.width = width
+      card.height = height
+    })
 
     // 启动自动保存（30秒间隔）
     startAutoSave(30000)
@@ -1174,17 +1187,6 @@ export const useCanvasStore = defineStore('canvas', () => {
     selectedCardIds.value.clear()
     nextCardId = 0
   }
-
-  // Initialize with some default data
-  addCardInternal(50, 50)
-  addCardInternal(250, 150)
-
-  // 自动调整所有现有卡片的尺寸
-  cards.forEach(card => {
-    const { width, height } = calculateCardSize(card.title)
-    card.width = width
-    card.height = height
-  })
 
   return {
     cards,

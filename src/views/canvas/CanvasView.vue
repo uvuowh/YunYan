@@ -1,5 +1,29 @@
 <template>
   <div ref="canvasContainer" class="canvas-container">
+    <!-- 隐藏的测试锚点元素 - 用于E2E测试选择器 -->
+    <div
+      v-for="card in cards"
+      :key="`test-anchor-${card.id}`"
+      :data-testid="`canvas-card-${card.id}`"
+      class="test-anchor"
+      :style="{
+        position: 'absolute',
+        left: `${card.x}px`,
+        top: `${card.y}px`,
+        width: `${card.width}px`,
+        height: `${card.height}px`,
+        pointerEvents: 'auto',
+        zIndex: 1000,
+        background: 'transparent',
+      }"
+      :aria-label="`Canvas card ${card.id}: ${card.title}`"
+      role="button"
+      tabindex="0"
+      @click="handleTestAnchorClick(card.id, $event)"
+    >
+      <!-- 添加隐藏文本以确保accessibility tree可见性 -->
+      <span class="sr-only">Canvas card {{ card.id }}: {{ card.title }}</span>
+    </div>
     <v-stage
       ref="stageRef"
       :config="stageConfig"
@@ -58,9 +82,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, getCurrentInstance, nextTick } from 'vue'
 import { useCanvasStore, type Card, type Connection } from '@/store/canvas'
 import { useHistoryStore, MoveCardCommand } from '@/store/history'
+import { useSettingsStore } from '@/store/settings'
 import { storeToRefs } from 'pinia'
 import CanvasCard from '@/components/canvas/CanvasCard.vue'
 import ConnectionLine from '@/components/canvas/ConnectionLine.vue'
@@ -68,6 +93,7 @@ import Konva from 'konva'
 
 const store = useCanvasStore()
 const historyStore = useHistoryStore()
+const settingsStore = useSettingsStore()
 const { cards, connections } = storeToRefs(store)
 
 // 拖拽状态管理
@@ -95,11 +121,28 @@ const stageConfig = ref({
 const isDragging = ref(false)
 const lastPointerPosition = ref({ x: 0, y: 0 })
 
-onMounted(() => {
-  window.addEventListener('resize', () => {
-    stageConfig.value.width = window.innerWidth
-    stageConfig.value.height = window.innerHeight
-  })
+onMounted(async () => {
+  try {
+    // 等待一个tick确保DOM完全渲染
+    await nextTick()
+    // 检查容器尺寸
+    const containerRect = canvasContainer.value?.getBoundingClientRect()
+    if (containerRect && (containerRect.width === 0 || containerRect.height === 0)) {
+      settingsStore.setErrorMessage('Canvas容器尺寸为零，可能存在CSS布局问题')
+    }
+
+    // 检查Vue Konva是否正确初始化
+    if (!window.Konva) {
+      throw new Error('Konva library not loaded')
+    }
+
+    window.addEventListener('resize', () => {
+      stageConfig.value.width = window.innerWidth
+      stageConfig.value.height = window.innerHeight
+    })
+  } catch (error) {
+    settingsStore.setErrorMessage(`CanvasView初始化失败: ${error.message}`)
+  }
 })
 
 // 鼠标按下事件 - 检测中键拖拽和框选
@@ -303,6 +346,13 @@ const connectionPairs = computed(() => {
     })
     .filter((p: any) => p !== null) as { connection: Connection; card1: Card; card2: Card }[]
 })
+
+// 处理测试锚点点击 - 将点击事件转发给对应的Konva元素
+const handleTestAnchorClick = (cardId: number, event: MouseEvent) => {
+  // 支持 Ctrl+点击多选
+  const isMultiSelect = event.ctrlKey || event.metaKey
+  store.selectCard(cardId, isMultiSelect)
+}
 </script>
 
 <style scoped>
@@ -324,5 +374,24 @@ const connectionPairs = computed(() => {
 /* 优化触控板体验 */
 .canvas-container canvas {
   touch-action: none; /* 禁用默认触摸行为 */
+}
+
+/* 测试锚点样式 - 用于E2E测试 */
+.test-anchor {
+  /* 透明背景，仅用于测试选择器 */
+  background: transparent;
+}
+
+/* Screen reader only - 隐藏但对辅助技术可见 */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 </style>

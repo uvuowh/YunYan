@@ -3,6 +3,7 @@
     ref="shapeRef"
     :config="{
       id: String(props.id),
+      name: props.dataTestid,
       x: props.x,
       y: props.y,
       draggable: true,
@@ -52,7 +53,7 @@
 
 <script setup lang="ts">
 import { useCanvasStore } from '@/store/canvas'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import Konva from 'konva'
 
 const props = defineProps<{
