@@ -1,0 +1,58 @@
+{
+  "mcpServers": {
+    "shrimp-task-manager": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-shrimp-task-manager"
+      ],
+      "env": {
+        "DATA_DIR": "/Users/uvu/YunYan/.shrimp-task-manager/data",
+        "TEMPLATES_USE": "zh",
+        "ENABLE_GUI": "true",
+        "LOG_LEVEL": "info"
+      }
+    },
+    "mcp-feedback-enhanced": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-feedback-enhanced"
+      ],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-sequential-thinking"
+      ],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@context7/mcp-server"
+      ],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}

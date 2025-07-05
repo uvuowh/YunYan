@@ -1,0 +1,88 @@
+{
+  "folders": [
+    {
+      "name": "YunYan 主项目",
+      "path": "."
+    },
+    {
+      "name": "Shrimp 配置",
+      "path": "./.shrimp-task-manager"
+    },
+    {
+      "name": "文档",
+      "path": "./docs"
+    }
+  ],
+  "settings": {
+    "files.associations": {
+      "*.md": "markdown",
+      "mcp.json": "jsonc",
+      ".env": "properties"
+    },
+    "search.exclude": {
+      "**/.shrimp-task-manager/data": true,
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/target": true
+    },
+    "files.watcherExclude": {
+      "**/.shrimp-task-manager/data/**": true
+    },
+    "terminal.integrated.env.osx": {
+      "DATA_DIR": "${workspaceFolder}/.shrimp-task-manager/data",
+      "TEMPLATES_USE": "zh",
+      "ENABLE_GUI": "true"
+    },
+    "terminal.integrated.env.linux": {
+      "DATA_DIR": "${workspaceFolder}/.shrimp-task-manager/data",
+      "TEMPLATES_USE": "zh",
+      "ENABLE_GUI": "true"
+    },
+    "terminal.integrated.env.windows": {
+      "DATA_DIR": "${workspaceFolder}/.shrimp-task-manager/data",
+      "TEMPLATES_USE": "zh",
+      "ENABLE_GUI": "true"
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Shrimp: 完整工作流",
+        "dependsOrder": "sequence",
+        "dependsOn": [
+          "启动 Shrimp Task Manager",
+          "启动 Shrimp Web GUI"
+        ],
+        "group": "build",
+        "detail": "启动完整的 Shrimp Task Manager 工作流"
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "完整开发环境",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/scripts/shrimp-manager.sh",
+        "args": ["start"],
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "Vue.volar",
+      "tauri-apps.tauri-vscode",
+      "rust-lang.rust-analyzer",
+      "ms-vscode.vscode-json",
+      "esbenp.prettier-vscode",
+      "gruntfuggly.todo-tree",
+      "aaron-bond.better-comments",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  }
+}
