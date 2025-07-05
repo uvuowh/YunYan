@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import Sidebar from '@/components/sidebar/Sidebar.vue';
+import KeyboardShortcutsHelp from '@/components/ui/KeyboardShortcutsHelp.vue';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+
+// 初始化键盘快捷键
+useKeyboardShortcuts();
 </script>
 
 <template>
@@ -11,6 +16,9 @@ import Sidebar from '@/components/sidebar/Sidebar.vue';
           <router-link to="/canvas">Canvas</router-link>
         </div>
 
+        <div class="nav-actions">
+          <KeyboardShortcutsHelp />
+        </div>
       </nav>
       <router-view />
     </div>
@@ -52,6 +60,12 @@ nav {
   gap: 2rem;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 nav a {
   font-weight: 500;
   color: var(--color-text-secondary);
@@ -80,7 +94,7 @@ nav a.router-link-exact-active {
   --color-bg-primary: #f8f9fa; /* Off-white main background */
   --color-bg-secondary: #ffffff; /* White for cards, sidebars */
   --color-bg-nav: #ffffff;
-  
+
   --color-border: #dee2e6; /* Subtle borders */
 
   --color-text-primary: #212529; /* Almost black for main text */

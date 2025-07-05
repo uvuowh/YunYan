@@ -6,6 +6,7 @@
       y: props.y,
       draggable: true,
     }"
+    @dragstart="handleDragStart"
     @dragend="handleDragEnd"
     @click="handleClick"
     @contextmenu="handleContextMenu"
@@ -64,15 +65,17 @@ const props = defineProps<{
   width: number;
   height: number;
   blockCount?: number;
+  dataTestid?: string;
 }>();
 
 const emit = defineEmits<{
+  (e: 'dragstart', value: { id: number; x: number; y: number }): void;
   (e: 'dragend', value: { id: number; x: number; y: number }): void;
 }>();
 
 const store = useCanvasStore();
 
-const isSelected = computed(() => store.selectedCardId === props.id);
+const isSelected = computed(() => store.isCardSelected(props.id));
 
 /**
  * 截断标题以适应卡片宽度
@@ -94,14 +97,19 @@ const truncateTitle = (title: string, maxWidth: number) => {
 const shapeRef = ref<Konva.Group | null>(null);
 const textNodeRef = ref<Konva.Text | null>(null);
 
+const handleDragStart = (e: Konva.KonvaEventObject<DragEvent>) => {
+  emit('dragstart', { id: props.id, x: e.target.x(), y: e.target.y() });
+};
+
 const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
   emit('dragend', { id: props.id, x: e.target.x(), y: e.target.y() });
 };
 
 const handleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
   if (e.evt.button === 0) {
-    // 左键点击：仅选择/取消选择卡片
-    store.selectCard(props.id);
+    // 左键点击：支持 Ctrl+点击多选
+    const isMultiSelect = e.evt.ctrlKey || e.evt.metaKey; // 支持 Mac 的 Cmd 键
+    store.selectCard(props.id, isMultiSelect);
   }
 };
 
@@ -113,4 +121,4 @@ const handleContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
   // 在选中的卡片和当前卡片之间创建连接
   store.manageConnection(props.id);
 };
-</script> 
+</script>

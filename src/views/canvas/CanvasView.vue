@@ -33,7 +33,24 @@
           :title="card.title"
           :content="card.content"
           :block-count="card.blocks?.length || 0"
+          @dragstart="handleCardDragStart"
           @dragend="handleCardDragEnd"
+          :data-testid="`canvas-card-${card.id}`"
+        />
+
+        <!-- 框选矩形 -->
+        <v-rect
+          v-if="isSelecting && selectionStart && selectionEnd"
+          :config="{
+            x: Math.min(selectionStart.x, selectionEnd.x),
+            y: Math.min(selectionStart.y, selectionEnd.y),
+            width: Math.abs(selectionEnd.x - selectionStart.x),
+            height: Math.abs(selectionEnd.y - selectionStart.y),
+            fill: 'rgba(13, 110, 253, 0.1)',
+            stroke: '#0d6efd',
+            strokeWidth: 1,
+            dash: [5, 5]
+          }"
         />
       </v-layer>
     </v-stage>
@@ -43,13 +60,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useCanvasStore, type Card, type Connection } from '@/store/canvas';
+import { useHistoryStore, MoveCardCommand } from '@/store/history';
 import { storeToRefs } from 'pinia';
 import CanvasCard from '@/components/canvas/CanvasCard.vue';
 import ConnectionLine from '@/components/canvas/ConnectionLine.vue';
 import Konva from 'konva';
 
 const store = useCanvasStore();
+const historyStore = useHistoryStore();
 const { cards, connections } = storeToRefs(store);
+
+// 拖拽状态管理
+const dragStartPositions = ref<Map<number, { x: number; y: number }>>(new Map());
+
+// 框选状态管理
+const isSelecting = ref(false);
+const selectionStart = ref<{ x: number; y: number } | null>(null);
+const selectionEnd = ref<{ x: number; y: number } | null>(null);
 
 const canvasContainer = ref<HTMLDivElement | null>(null);
 const stageRef = ref<Konva.Stage | null>(null);
@@ -75,7 +102,7 @@ onMounted(() => {
   });
 });
 
-// 鼠标按下事件 - 检测中键拖拽
+// 鼠标按下事件 - 检测中键拖拽和框选
 const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
   const stage = stageRef.value?.getStage();
   if (!stage) return;
@@ -91,30 +118,51 @@ const handleMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
     // 改变鼠标样式
     stage.container().style.cursor = 'grabbing';
   }
+
+  // 左键在空白区域按下 - 开始框选
+  if (e.evt.button === 0 && e.target.getType() === 'Stage') {
+    const pos = stage.getRelativePointerPosition();
+    if (pos) {
+      isSelecting.value = true;
+      selectionStart.value = { x: pos.x, y: pos.y };
+      selectionEnd.value = { x: pos.x, y: pos.y };
+    }
+  }
 };
 
-// 鼠标移动事件 - 处理画布拖拽
+// 鼠标移动事件 - 处理画布拖拽和框选
 const handleMouseMove = (_e: Konva.KonvaEventObject<MouseEvent>) => {
   const stage = stageRef.value?.getStage();
-  if (!stage || !isDragging.value) return;
+  if (!stage) return;
 
-  const pos = stage.getPointerPosition();
-  if (!pos) return;
+  // 处理画布拖拽
+  if (isDragging.value) {
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
 
-  const dx = pos.x - lastPointerPosition.value.x;
-  const dy = pos.y - lastPointerPosition.value.y;
+    const dx = pos.x - lastPointerPosition.value.x;
+    const dy = pos.y - lastPointerPosition.value.y;
 
-  stageConfig.value.x += dx;
-  stageConfig.value.y += dy;
+    stageConfig.value.x += dx;
+    stageConfig.value.y += dy;
 
-  stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
-  stage.batchDraw();
+    stage.position({ x: stageConfig.value.x, y: stageConfig.value.y });
+    stage.batchDraw();
 
-  lastPointerPosition.value = pos;
+    lastPointerPosition.value = pos;
+  }
+
+  // 处理框选
+  if (isSelecting.value && selectionStart.value) {
+    const pos = stage.getRelativePointerPosition();
+    if (pos) {
+      selectionEnd.value = { x: pos.x, y: pos.y };
+    }
+  }
 };
 
-// 鼠标释放事件 - 结束拖拽
-const handleMouseUp = (_e: Konva.KonvaEventObject<MouseEvent>) => {
+// 鼠标释放事件 - 结束拖拽和框选
+const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent>) => {
   const stage = stageRef.value?.getStage();
   if (!stage) return;
 
@@ -122,6 +170,31 @@ const handleMouseUp = (_e: Konva.KonvaEventObject<MouseEvent>) => {
     isDragging.value = false;
     // 恢复鼠标样式
     stage.container().style.cursor = 'grab';
+  }
+
+  // 完成框选
+  if (isSelecting.value && selectionStart.value && selectionEnd.value) {
+    const isMultiSelect = e.evt.ctrlKey || e.evt.metaKey;
+
+    // 只有当框选区域足够大时才执行选择
+    const minSelectionSize = 10;
+    const width = Math.abs(selectionEnd.value.x - selectionStart.value.x);
+    const height = Math.abs(selectionEnd.value.y - selectionStart.value.y);
+
+    if (width > minSelectionSize || height > minSelectionSize) {
+      store.selectCardsInRect(
+        selectionStart.value.x,
+        selectionStart.value.y,
+        selectionEnd.value.x,
+        selectionEnd.value.y,
+        isMultiSelect
+      );
+    }
+
+    // 重置框选状态
+    isSelecting.value = false;
+    selectionStart.value = null;
+    selectionEnd.value = null;
   }
 };
 
@@ -193,8 +266,27 @@ const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
     }
 };
 
+const handleCardDragStart = ({ id, x, y }: { id: number; x: number; y: number }) => {
+  // 记录拖拽开始位置
+  dragStartPositions.value.set(id, { x, y });
+};
+
 const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) => {
-  store.updateCard({ id, x, y });
+  const startPosition = dragStartPositions.value.get(id);
+  if (startPosition && (startPosition.x !== x || startPosition.y !== y)) {
+    // 创建移动命令
+    const command = new MoveCardCommand(
+      { cards: store.cards }, // 传递必要的 store 引用
+      id,
+      startPosition,
+      { x, y }
+    );
+
+    historyStore.executeCommand(command);
+  }
+
+  // 清理拖拽开始位置
+  dragStartPositions.value.delete(id);
 };
 
 const connectionPairs = computed(() => {

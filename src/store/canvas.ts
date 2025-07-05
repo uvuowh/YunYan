@@ -1,9 +1,16 @@
 import { defineStore } from 'pinia';
 import { reactive, ref } from 'vue';
+import {
+  AddCardCommand,
+  RemoveCardCommand,
+  UpdateCardCommand,
+  MoveCardCommand,
+  ManageConnectionCommand
+} from './history';
 
 // UUID 生成函数
 function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
@@ -59,10 +66,10 @@ export interface Card {
 }
 
 export interface Connection {
-    id: string;
-    id1: number; // Always the smaller ID
-    id2: number; // Always the larger ID
-    direction: '1->2' | '2->1' | 'both' | 'none';
+  id: string;
+  id1: number; // Always the smaller ID
+  id2: number; // Always the larger ID
+  direction: '1->2' | '2->1' | 'both' | 'none';
 }
 
 type ConnectionDirection = Connection['direction'];
@@ -86,8 +93,19 @@ export const useCanvasStore = defineStore('canvas', () => {
   const cards = reactive<Card[]>([]);
   const connections = reactive<Connection[]>([]);
   const selectedCardId = ref<number | null>(null);
+  const selectedCardIds = ref<Set<number>>(new Set()); // 多选卡片ID集合
   const focusedBlockId = ref<string | null>(null); // 聚焦的块ID
   let nextCardId = 0;
+
+  // 历史管理 - 延迟导入避免循环依赖
+  let historyStore: any = null;
+  const getHistoryStore = async () => {
+    if (!historyStore) {
+      const { useHistoryStore } = await import('./history');
+      historyStore = useHistoryStore();
+    }
+    return historyStore;
+  };
 
   // 自动保存相关
   const isAutoSaving = ref(false);
@@ -283,12 +301,9 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   /**
-   * Adds a new card to the canvas at the specified coordinates.
-   * The new card is initialized with a default title, content, and size.
-   * @param {number} x The x-coordinate for the new card.
-   * @param {number} y The y-coordinate for the new card.
+   * Internal function to add card without history tracking (for initialization)
    */
-  function addCard(x: number, y: number) {
+  function addCardInternal(x: number, y: number): Card {
     const newCardId = nextCardId++;
     const documentTitle = `Document-${newCardId}`;
     const defaultContent = `# ${documentTitle}\n\n这是一个新的文档。\n\n- 支持块引用 [[其他块]]\n- 支持双向链接 ((块引用))`;
@@ -315,6 +330,27 @@ export const useCanvasStore = defineStore('canvas', () => {
     cards.push(newCard);
     updateBacklinks();
     markAsModified();
+    return newCard;
+  }
+
+  /**
+   * Adds a new card to the canvas at the specified coordinates with history tracking.
+   * The new card is initialized with a default title, content, and size.
+   * @param {number} x The x-coordinate for the new card.
+   * @param {number} y The y-coordinate for the new card.
+   */
+  function addCard(x: number, y: number) {
+    const newCard = addCardInternal(x, y);
+
+    // 使用命令模式添加卡片
+    const command = new AddCardCommand(
+      { cards, nextCardId }, // 传递必要的 store 引用
+      newCard
+    );
+
+    getHistoryStore().then(history => {
+      history.executeCommand(command);
+    });
   }
 
   /**
@@ -325,22 +361,18 @@ export const useCanvasStore = defineStore('canvas', () => {
     const cardIndex = cards.findIndex(c => c.id === id);
     if (cardIndex === -1) return;
 
-    // Remove the card
-    cards.splice(cardIndex, 1);
+    const cardToRemove = cards[cardIndex];
 
-    // Remove associated connections
-    const connectionsToRemove = connections.filter(c => c.id1 === id || c.id2 === id);
-    connectionsToRemove.forEach(conn => {
-      const connIndex = connections.indexOf(conn);
-      if (connIndex > -1) {
-        connections.splice(connIndex, 1);
-      }
+    // 使用命令模式删除卡片
+    const command = new RemoveCardCommand(
+      { cards, connections, selectedCardId }, // 传递必要的 store 引用
+      cardToRemove
+    );
+
+    getHistoryStore().then(history => {
+      history.executeCommand(command);
     });
 
-    // Clear selection if the removed card was selected
-    if (selectedCardId.value === id) {
-      selectedCardId.value = null;
-    }
     markAsModified();
   }
 
@@ -348,17 +380,114 @@ export const useCanvasStore = defineStore('canvas', () => {
    * Toggles the selection of a card. If the card is already selected,
    * it gets deselected. Otherwise, it becomes the selected card.
    * @param {number | null} id The ID of the card to select, or null to deselect.
+   * @param {boolean} multiSelect Whether to enable multi-selection (Ctrl+click)
    */
-  function selectCard(id: number | null) {
-    if (selectedCardId.value === id) {
-        selectedCardId.value = null; // deselect
+  function selectCard(id: number | null, multiSelect: boolean = false) {
+    if (id === null) {
+      // 清除所有选择
+      selectedCardId.value = null;
+      selectedCardIds.value.clear();
+      return;
+    }
+
+    if (multiSelect) {
+      // 多选模式
+      if (selectedCardIds.value.has(id)) {
+        // 如果已选中，则取消选择
+        selectedCardIds.value.delete(id);
+        // 如果这是主选择的卡片，更新主选择
+        if (selectedCardId.value === id) {
+          selectedCardId.value = selectedCardIds.value.size > 0
+            ? Array.from(selectedCardIds.value)[0]
+            : null;
+        }
+      } else {
+        // 添加到选择集合
+        selectedCardIds.value.add(id);
+        // 如果没有主选择，设置为主选择
+        if (selectedCardId.value === null) {
+          selectedCardId.value = id;
+        }
+      }
     } else {
+      // 单选模式
+      if (selectedCardId.value === id) {
+        // 取消选择
+        selectedCardId.value = null;
+        selectedCardIds.value.clear();
+      } else {
+        // 选择新卡片
         selectedCardId.value = id;
+        selectedCardIds.value.clear();
+        selectedCardIds.value.add(id);
+      }
     }
   }
-  
+
   /**
-   * Manages the connection state between the currently selected card and a target card.
+   * Internal function to manage connection without history tracking
+   */
+  function manageConnectionInternal(targetId: number) {
+    const selectedId = selectedCardId.value;
+    if (selectedId === null || selectedId === targetId) return;
+
+    const id1 = Math.min(selectedId, targetId);
+    const id2 = Math.max(selectedId, targetId);
+
+    const existingConnection = connections.find(c => c.id1 === id1 && c.id2 === id2);
+    const currentDirection = existingConnection?.direction ?? 'none';
+    const action = selectedId === id1 ? '1->2' : '2->1';
+
+    const nextDirection = transitions[action][currentDirection];
+
+    let newConnection: Connection | null = null;
+    let oldConnection: Connection | null = existingConnection ? { ...existingConnection } : null;
+
+    if (nextDirection === 'none') {
+      // 删除连接
+      newConnection = null;
+    } else if (existingConnection) {
+      // 更新现有连接
+      newConnection = {
+        ...existingConnection,
+        direction: nextDirection
+      };
+    } else {
+      // 创建新连接
+      newConnection = {
+        id: `${id1}-${id2}`,
+        id1,
+        id2,
+        direction: nextDirection,
+      };
+    }
+
+    // 直接更新连接状态
+    if (newConnection === null) {
+      // 删除连接
+      const index = connections.findIndex(c => c.id1 === id1 && c.id2 === id2);
+      if (index !== -1) {
+        connections.splice(index, 1);
+      }
+    } else if (oldConnection) {
+      // 更新现有连接
+      const index = connections.findIndex(c => c.id1 === id1 && c.id2 === id2);
+      if (index !== -1) {
+        connections[index] = newConnection;
+      }
+    } else {
+      // 添加新连接
+      connections.push(newConnection);
+    }
+
+    markAsModified();
+    // By not resetting the selectedCardId, we keep the focus on the source
+    // node, allowing for chaining multiple connections from the same node.
+    // selectedCardId.value = null; // Deselect after action
+  }
+
+  /**
+   * Manages the connection state between the currently selected card and a target card with history tracking.
    * This function implements a state machine to cycle through connection states
    * (none -> one-way -> two-way -> other-way -> none).
    * @param {number} targetId The ID of the card being connected to.
@@ -376,24 +505,117 @@ export const useCanvasStore = defineStore('canvas', () => {
 
     const nextDirection = transitions[action][currentDirection];
 
+    let newConnection: Connection | null = null;
+    let oldConnection: Connection | null = existingConnection ? { ...existingConnection } : null;
+
     if (nextDirection === 'none') {
-      if (existingConnection) {
-        connections.splice(connections.indexOf(existingConnection), 1);
-      }
+      // 删除连接
+      newConnection = null;
     } else if (existingConnection) {
-      existingConnection.direction = nextDirection;
+      // 更新现有连接
+      newConnection = {
+        ...existingConnection,
+        direction: nextDirection
+      };
     } else {
-      connections.push({
+      // 创建新连接
+      newConnection = {
         id: `${id1}-${id2}`,
         id1,
         id2,
         direction: nextDirection,
-      });
+      };
     }
+
+    // 使用命令模式管理连接
+    const command = new ManageConnectionCommand(
+      { connections }, // 传递必要的 store 引用
+      id1,
+      id2,
+      oldConnection,
+      newConnection
+    );
+
+    getHistoryStore().then(history => {
+      history.executeCommand(command);
+    });
+
     markAsModified();
     // By not resetting the selectedCardId, we keep the focus on the source
     // node, allowing for chaining multiple connections from the same node.
     // selectedCardId.value = null; // Deselect after action
+  }
+
+  /**
+   * 选择所有卡片
+   */
+  function selectAllCards() {
+    selectedCardIds.value.clear();
+    cards.forEach(card => selectedCardIds.value.add(card.id));
+    selectedCardId.value = cards.length > 0 ? cards[0].id : null;
+  }
+
+  /**
+   * 检查卡片是否被选中（包括多选）
+   */
+  function isCardSelected(id: number): boolean {
+    return selectedCardIds.value.has(id) || selectedCardId.value === id;
+  }
+
+  /**
+   * 获取所有选中的卡片ID
+   */
+  function getSelectedCardIds(): number[] {
+    return Array.from(selectedCardIds.value);
+  }
+
+  /**
+   * 获取选中的卡片数量
+   */
+  function getSelectedCount(): number {
+    return selectedCardIds.value.size;
+  }
+
+  /**
+   * 框选卡片（根据矩形区域选择）
+   */
+  function selectCardsInRect(x1: number, y1: number, x2: number, y2: number, multiSelect: boolean = false) {
+    const minX = Math.min(x1, x2);
+    const maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2);
+    const maxY = Math.max(y1, y2);
+
+    if (!multiSelect) {
+      selectedCardIds.value.clear();
+      selectedCardId.value = null;
+    }
+
+    const selectedCards: number[] = [];
+    cards.forEach(card => {
+      // 检查卡片是否在选择矩形内
+      if (card.x >= minX && card.x + card.width <= maxX &&
+        card.y >= minY && card.y + card.height <= maxY) {
+        selectedCardIds.value.add(card.id);
+        selectedCards.push(card.id);
+      }
+    });
+
+    // 设置主选择
+    if (selectedCards.length > 0 && selectedCardId.value === null) {
+      selectedCardId.value = selectedCards[0];
+    }
+
+    return selectedCards;
+  }
+
+  /**
+   * 删除所有选中的卡片
+   */
+  function removeSelectedCards() {
+    const selectedIds = Array.from(selectedCardIds.value);
+    selectedIds.forEach(id => removeCard(id));
+    selectedCardIds.value.clear();
+    selectedCardId.value = null;
   }
 
   /**
@@ -412,38 +634,106 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   /**
-   * Updates the properties of a specific card.
+   * Internal function to update card without history tracking
+   */
+  function updateCardInternal(payload: Partial<Card> & { id: number }) {
+    const { id, ...data } = payload;
+    const card = cards.find(c => c.id === id);
+    if (!card) return;
+
+    // 保存旧数据用于撤销
+    const oldData: Partial<Card> = {};
+    Object.keys(data).forEach(key => {
+      oldData[key as keyof Card] = card[key as keyof Card];
+    });
+
+    // 如果更新了标题，自动调整尺寸
+    if (data.title && data.title !== card.title) {
+      const { width, height } = calculateCardSize(data.title);
+      data.width = width;
+      data.height = height;
+      oldData.width = card.width;
+      oldData.height = card.height;
+    }
+
+    // 如果更新了内容，重新解析块
+    if (data.content && data.content !== card.content) {
+      oldData.blocks = [...card.blocks]; // 深拷贝块数组
+      data.blocks = parseContentToBlocks(data.content);
+      data.lastModified = new Date();
+      data.version = (card.version || 1) + 1;
+    }
+
+    // 更新最后修改时间
+    if (Object.keys(data).length > 0) {
+      oldData.lastModified = card.lastModified;
+      oldData.version = card.version;
+      data.lastModified = new Date();
+      data.version = (card.version || 1) + 1;
+    }
+
+    // 直接更新卡片属性
+    Object.assign(card, data);
+
+    updateBacklinks();
+    markAsModified();
+  }
+
+  /**
+   * Updates the properties of a specific card with history tracking.
    * This function merges the provided data with the existing card data.
    * @param {Partial<Card> & { id: number }} payload An object containing the card ID and the properties to update.
    */
   function updateCard(payload: Partial<Card> & { id: number }) {
     const { id, ...data } = payload;
     const card = cards.find(c => c.id === id);
-    if (card) {
-      // 如果更新了标题，自动调整尺寸
-      if (data.title && data.title !== card.title) {
-        const { width, height } = calculateCardSize(data.title);
-        data.width = width;
-        data.height = height;
-      }
+    if (!card) return;
 
-      // 如果更新了内容，重新解析块
-      if (data.content && data.content !== card.content) {
-        card.blocks = parseContentToBlocks(data.content);
-        card.lastModified = new Date();
-        card.version = (card.version || 1) + 1; // 增加版本号
-      }
+    // 保存旧数据用于撤销
+    const oldData: Partial<Card> = {};
+    Object.keys(data).forEach(key => {
+      oldData[key as keyof Card] = card[key as keyof Card];
+    });
 
-      // 更新最后修改时间
-      if (Object.keys(data).length > 0) {
-        data.lastModified = new Date();
-        data.version = (card.version || 1) + 1;
-      }
-
-      Object.assign(card, data);
-      updateBacklinks();
-      markAsModified();
+    // 如果更新了标题，自动调整尺寸
+    if (data.title && data.title !== card.title) {
+      const { width, height } = calculateCardSize(data.title);
+      data.width = width;
+      data.height = height;
+      oldData.width = card.width;
+      oldData.height = card.height;
     }
+
+    // 如果更新了内容，重新解析块
+    if (data.content && data.content !== card.content) {
+      oldData.blocks = [...card.blocks]; // 深拷贝块数组
+      data.blocks = parseContentToBlocks(data.content);
+      data.lastModified = new Date();
+      data.version = (card.version || 1) + 1;
+    }
+
+    // 更新最后修改时间
+    if (Object.keys(data).length > 0) {
+      oldData.lastModified = card.lastModified;
+      oldData.version = card.version;
+      data.lastModified = new Date();
+      data.version = (card.version || 1) + 1;
+    }
+
+    // 使用命令模式更新卡片
+    const command = new UpdateCardCommand(
+      { cards }, // 传递必要的 store 引用
+      id,
+      oldData,
+      data
+    );
+
+    getHistoryStore().then(history => {
+      history.executeCommand(command);
+    });
+
+    updateBacklinks();
+    markAsModified();
   }
 
   /**
@@ -867,14 +1157,15 @@ export const useCanvasStore = defineStore('canvas', () => {
     cards.splice(0, cards.length);
     connections.splice(0, connections.length);
     selectedCardId.value = null;
+    selectedCardIds.value.clear();
     nextCardId = 0;
   }
 
 
 
   // Initialize with some default data
-  addCard(50, 50);
-  addCard(250, 150);
+  addCardInternal(50, 50);
+  addCardInternal(250, 150);
 
   // 自动调整所有现有卡片的尺寸
   cards.forEach(card => {
@@ -887,12 +1178,21 @@ export const useCanvasStore = defineStore('canvas', () => {
     cards,
     connections,
     selectedCardId,
+    selectedCardIds,
     focusedBlockId,
     nextCardId,
     addCard,
+    addCardInternal,
     removeCard,
     selectCard,
+    selectAllCards,
+    isCardSelected,
+    getSelectedCardIds,
+    getSelectedCount,
+    selectCardsInRect,
+    removeSelectedCards,
     updateCard,
+    updateCardInternal,
     updateBlock,
     addBlock,
     deleteBlock,
@@ -912,6 +1212,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     isAutoSaving,
     lastSaveTime,
     manageConnection,
+    manageConnectionInternal,
     clearCanvas,
     parseBlockReferences,
     renderContentWithReferences,
