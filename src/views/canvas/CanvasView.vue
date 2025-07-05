@@ -20,6 +20,7 @@
       role="button"
       tabindex="0"
       @click="handleTestAnchorClick(card.id, $event)"
+      @mousedown="handleTestAnchorMouseDown(card.id, $event)"
     >
       <!-- 添加隐藏文本以确保accessibility tree可见性 -->
       <span class="sr-only">Canvas card {{ card.id }}: {{ card.title }}</span>
@@ -321,7 +322,10 @@ const handleCardDragStart = ({ id, x, y }: { id: number; x: number; y: number })
 const handleCardDragEnd = ({ id, x, y }: { id: number; x: number; y: number }) => {
   const startPosition = dragStartPositions.value.get(id)
   if (startPosition && (startPosition.x !== x || startPosition.y !== y)) {
-    // 创建移动命令
+    // 确保store中的位置是最新的（因为在拖拽过程中已经实时更新了）
+    store.updateCardPosition(id, x, y)
+
+    // 创建移动命令用于历史记录
     const command = new MoveCardCommand(
       { cards: store.cards }, // 传递必要的 store 引用
       id,
@@ -352,6 +356,48 @@ const handleTestAnchorClick = (cardId: number, event: MouseEvent) => {
   // 支持 Ctrl+点击多选
   const isMultiSelect = event.ctrlKey || event.metaKey
   store.selectCard(cardId, isMultiSelect)
+}
+
+// 处理测试锚点鼠标按下 - 实现拖拽功能
+const handleTestAnchorMouseDown = (cardId: number, event: MouseEvent) => {
+  event.preventDefault()
+
+  const card = cards.value.find(c => c.id === cardId)
+  if (!card) return
+
+  const startX = event.clientX
+  const startY = event.clientY
+  const startCardX = card.x
+  const startCardY = card.y
+
+  // 记录拖拽开始位置
+  dragStartPositions.value.set(cardId, { x: startCardX, y: startCardY })
+
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    const deltaX = moveEvent.clientX - startX
+    const deltaY = moveEvent.clientY - startY
+    const newX = startCardX + deltaX
+    const newY = startCardY + deltaY
+
+    // 实时更新卡片位置
+    store.updateCardPosition(cardId, newX, newY)
+  }
+
+  const handleMouseUp = (upEvent: MouseEvent) => {
+    const deltaX = upEvent.clientX - startX
+    const deltaY = upEvent.clientY - startY
+    const newX = startCardX + deltaX
+    const newY = startCardY + deltaY
+
+    // 触发拖拽结束处理
+    handleCardDragEnd({ id: cardId, x: newX, y: newY })
+
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
 }
 </script>
 

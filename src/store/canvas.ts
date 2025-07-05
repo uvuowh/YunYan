@@ -658,6 +658,20 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   /**
+   * 实时更新卡片位置（用于拖拽过程中，不记录历史）
+   * @param {number} cardId 卡片ID
+   * @param {number} x 新的x坐标
+   * @param {number} y 新的y坐标
+   */
+  function updateCardPosition(cardId: number, x: number, y: number) {
+    const card = cards.find(c => c.id === cardId)
+    if (card) {
+      card.x = x
+      card.y = y
+    }
+  }
+
+  /**
    * Internal function to update card without history tracking
    */
   function updateCardInternal(payload: Partial<Card> & { id: number }) {
@@ -1238,6 +1252,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     findCardByBlockId,
     calculateCardSize,
     autoResizeCard,
+    updateCardPosition,
   }
 })
 

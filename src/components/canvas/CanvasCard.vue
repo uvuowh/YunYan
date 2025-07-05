@@ -9,6 +9,7 @@
       draggable: true,
     }"
     @dragstart="handleDragStart"
+    @dragmove="handleDragMove"
     @dragend="handleDragEnd"
     @click="handleClick"
     @contextmenu="handleContextMenu"
@@ -97,6 +98,13 @@ const textNodeRef = ref<Konva.Text | null>(null)
 
 const handleDragStart = (e: Konva.KonvaEventObject<DragEvent>) => {
   emit('dragstart', { id: props.id, x: e.target.x(), y: e.target.y() })
+}
+
+const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+  // 实时更新store中的卡片位置，使连接线能够跟随移动
+  const newX = e.target.x()
+  const newY = e.target.y()
+  store.updateCardPosition(props.id, newX, newY)
 }
 
 const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
