@@ -100,15 +100,17 @@ const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
 
 const handleClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
   if (e.evt.button === 0) {
-    // 左键点击：选择卡片并管理连接
+    // 左键点击：仅选择/取消选择卡片
     store.selectCard(props.id);
-    store.manageConnection(props.id);
   }
 };
 
 const handleContextMenu = (e: Konva.KonvaEventObject<PointerEvent>) => {
-  // 禁用右键菜单
+  // 右键点击：管理连接
   e.evt.preventDefault();
   e.cancelBubble = true;
+
+  // 在选中的卡片和当前卡片之间创建连接
+  store.manageConnection(props.id);
 };
 </script> 
