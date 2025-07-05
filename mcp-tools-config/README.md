@@ -27,30 +27,35 @@ mcp-tools-config/
 根据项目 `rules.md` 要求，配置以下 MCP 工具：
 
 ### 核心工具 (必需)
+
 - **mcp-feedback-enhanced** - 交互与反馈 (最高优先级)
 - **shrimp-task-manager** - 任务管理
 - **sequential-thinking** - 思维与规划
 - **context7** - 文档查询 (重点强化，首选权威工具)
 
 ### 扩展工具 (可选)
+
 - **brave-search** - 网络搜索，用于广泛概念和行业实践搜索
 - **tavily-search** - 备选网络搜索工具
 
 ## 🚀 快速开始
 
 ### 🤖 智能配置 (推荐)
+
 ```bash
 # 运行智能配置脚本 - 自动检测环境并配置
 ./quick-setup.sh
 ```
 
 **智能功能**:
+
 - ✅ 自动检测 Cursor IDE、Augment、VSCode
 - 🎯 智能推荐最佳配置选项
 - 🤖 Augment 自动配置 (支持多种安装路径)
 - 📋 提供默认选择，一键配置
 
 ### 🔧 高级配置
+
 ```bash
 # 仅配置 Augment (自动检测设置文件)
 ./shared/augment-auto-config.sh
@@ -62,18 +67,23 @@ mcp-tools-config/
 ### 📚 手动配置 - 选择你的开发环境
 
 #### 🎯 Cursor IDE 用户
+
 👉 **阅读**: [`cursor-setup-guide.md`](./cursor-setup-guide.md)
+
 - 完整的 Cursor IDE MCP 配置指南
 - 自动加载配置
 - 即开即用的体验
 
 #### 🔧 Augment 环境用户
+
 👉 **阅读**: [`augment-setup-guide.md`](./augment-setup-guide.md)
+
 - Augment 专用 MCP 配置指南
 - 设置面板和 JSON 两种配置方式
 - 兼容性优化建议
 
 #### 🔄 多环境用户
+
 两个指南都可以参考，配置文件已分别优化。
 
 ## ⚙️ 配置优先级
@@ -89,11 +99,13 @@ mcp-tools-config/
 ## 🔧 通用要求
 
 ### 系统要求
+
 - Node.js >= 16
 - npm 或 pnpm
 - 网络连接 (用于下载 MCP 包)
 
 ### API Keys (可选)
+
 - Brave Search API Key (免费层可用)
 - 其他工具无需额外 API Keys
 

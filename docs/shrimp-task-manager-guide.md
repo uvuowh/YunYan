@@ -9,6 +9,7 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
 ### 1. 在 VSCode 中使用
 
 #### 通过任务面板
+
 1. 按 `Cmd+Shift+P` (macOS) 或 `Ctrl+Shift+P` (Windows/Linux)
 2. 输入 "Tasks: Run Task"
 3. 选择以下任务之一：
@@ -17,6 +18,7 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
    - **检查 Shrimp 状态** - 检查版本和状态
 
 #### 通过命令行脚本
+
 ```bash
 # 启动服务
 ./scripts/shrimp-manager.sh start
@@ -49,28 +51,34 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
 ## 主要功能
 
 ### 任务规划
+
 - **命令**: "plan task [任务描述]"
 - **功能**: 分析需求，创建结构化任务计划
 
 ### 任务执行
+
 - **命令**: "execute task [任务名称或ID]"
 - **功能**: 执行指定任务
 
 ### 研究模式
+
 - **命令**: "research [主题]" 或 "enter research mode for [技术/问题]"
 - **功能**: 系统性技术调研和知识收集
 
 ### 项目规则初始化
+
 - **命令**: "init project rules"
 - **功能**: 建立项目标准和规则
 
 ### 连续模式
+
 - **命令**: "continuous mode"
 - **功能**: 自动执行所有任务队列
 
 ## 工作流程示例
 
 ### 1. 新功能开发
+
 ```
 1. "init project rules" - 初始化项目规则
 2. "plan task 添加用户登录功能" - 规划任务
@@ -79,6 +87,7 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
 ```
 
 ### 2. 技术调研
+
 ```
 1. "research Vue 3 Composition API 最佳实践"
 2. "plan task 重构组件使用 Composition API"
@@ -88,13 +97,16 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
 ## 配置说明
 
 ### 环境变量
+
 - `DATA_DIR`: 数据存储目录
 - `TEMPLATES_USE`: 模板语言 (zh/en)
 - `ENABLE_GUI`: 是否启用 Web GUI
 - `LOG_LEVEL`: 日志级别
 
 ### 自定义提示词
+
 可以通过环境变量自定义 AI 提示词：
+
 - `MCP_PROMPT_PLAN_TASK`: 自定义任务规划提示
 - `MCP_PROMPT_EXECUTE_TASK_APPEND`: 额外的执行指令
 
@@ -116,6 +128,7 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
    - 检查配置文件格式是否正确
 
 ### 重置数据
+
 ```bash
 ./scripts/shrimp-manager.sh clean
 ```
@@ -123,13 +136,16 @@ Shrimp Task Manager 是一个基于 MCP (Model Context Protocol) 的智能任务
 ## 高级用法
 
 ### 自定义模板
+
 1. 复制 `src/prompts/templates_en` 到数据目录
 2. 重命名为自定义名称
 3. 修改模板内容
 4. 设置 `TEMPLATES_USE` 环境变量
 
 ### 项目特定配置
+
 每个项目可以有独立的配置：
+
 - 创建项目特定的 `.cursor/mcp.json`
 - 使用不同的 `DATA_DIR` 路径
 

@@ -5,24 +5,29 @@
 > 👉 **新的配置位置**: [`mcp-tools-config/`](../mcp-tools-config/)
 >
 > 请根据你的开发环境选择对应的配置指南：
+>
 > - **Cursor IDE 用户**: [`cursor-setup-guide.md`](../mcp-tools-config/cursor-setup-guide.md)
 > - **Augment 环境用户**: [`augment-setup-guide.md`](../mcp-tools-config/augment-setup-guide.md)
 
 ## 🎯 快速开始
 
 ### 🚀 自动配置 (推荐)
+
 ```bash
 # 运行快速设置脚本
 ./mcp-tools-config/quick-setup.sh
 ```
 
 ### 📚 手动配置
+
 根据你的开发环境选择对应指南：
 
 #### Cursor IDE 用户
+
 👉 **详细指南**: [`mcp-tools-config/cursor-setup-guide.md`](../mcp-tools-config/cursor-setup-guide.md)
 
 **快速配置**:
+
 ```bash
 # 复制配置文件
 mkdir -p .cursor
@@ -32,9 +37,11 @@ cp mcp-tools-config/cursor-configs/mcp.json .cursor/
 ```
 
 #### Augment 环境用户
+
 👉 **详细指南**: [`mcp-tools-config/augment-setup-guide.md`](../mcp-tools-config/augment-setup-guide.md)
 
 **配置步骤**:
+
 1. 打开 Augment 设置面板 (⚙️ 齿轮图标)
 2. 找到 "MCP servers" 部分
 3. 按照指南添加 5 个 MCP 服务器
@@ -44,13 +51,13 @@ cp mcp-tools-config/cursor-configs/mcp.json .cursor/
 
 根据 `rules.md` 要求配置的工具：
 
-| 工具 | 功能 | 优先级 | 状态 |
-|------|------|--------|------|
-| **mcp-feedback-enhanced** | 交互与反馈 | 🔥 最高 | ✅ 已配置 |
-| **context7** | 文档查询 | 🎯 重点强化 | ✅ 已配置 |
-| **sequential-thinking** | 思维规划 | 🧠 高 | ✅ 已配置 |
-| **shrimp-task-manager** | 任务管理 | 📋 中 | ✅ 已配置 |
-| **brave-search** | 网络搜索 | 🔍 可选 | ⚠️ 需要 API Key |
+| 工具                      | 功能       | 优先级      | 状态            |
+| ------------------------- | ---------- | ----------- | --------------- |
+| **mcp-feedback-enhanced** | 交互与反馈 | 🔥 最高     | ✅ 已配置       |
+| **context7**              | 文档查询   | 🎯 重点强化 | ✅ 已配置       |
+| **sequential-thinking**   | 思维规划   | 🧠 高       | ✅ 已配置       |
+| **shrimp-task-manager**   | 任务管理   | 📋 中       | ✅ 已配置       |
+| **brave-search**          | 网络搜索   | 🔍 可选     | ⚠️ 需要 API Key |
 
 ## 🔍 验证配置
 

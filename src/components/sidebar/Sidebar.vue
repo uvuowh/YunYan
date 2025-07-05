@@ -1,19 +1,31 @@
 <template>
-  <aside class="sidebar" v-if="selectedCard">
+  <aside v-if="selectedCard" class="sidebar">
     <div class="sidebar-header">
       <input
         v-model="selectedCard.title"
-        @input="handleTitleChange"
         class="title-input"
         placeholder="文档标题..."
+        @input="handleTitleChange"
       />
       <div class="document-info">
         <span class="block-count">{{ selectedCard.blocks?.length || 0 }} blocks</span>
       </div>
-      <button @click="handleDelete" class="delete-button" aria-label="Delete Document">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="delete-button" aria-label="Delete Document" @click="handleDelete">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          ></path>
           <line x1="10" y1="11" x2="10" y2="17"></line>
           <line x1="14" y1="11" x2="14" y2="17"></line>
         </svg>
@@ -21,7 +33,7 @@
     </div>
     <div class="sidebar-content">
       <div class="data-management-section">
-        <button @click="showDataPanel = !showDataPanel" class="data-btn" title="数据管理">
+        <button class="data-btn" title="数据管理" @click="showDataPanel = !showDataPanel">
           💾 数据管理
         </button>
       </div>
@@ -30,29 +42,22 @@
       <div v-if="showDataPanel" class="data-panel">
         <h4>数据管理</h4>
         <div class="data-actions">
-          <button @click="handleSaveData" class="action-btn save-btn">
-            💾 手动保存
-          </button>
-          <button @click="handleExportData" class="action-btn export-btn">
-            📤 导出数据
-          </button>
-          <button @click="triggerImport" class="action-btn import-btn">
-            📥 导入数据
-          </button>
+          <button class="action-btn save-btn" @click="handleSaveData">💾 手动保存</button>
+          <button class="action-btn export-btn" @click="handleExportData">📤 导出数据</button>
+          <button class="action-btn import-btn" @click="triggerImport">📥 导入数据</button>
           <input
             ref="fileInput"
             type="file"
             accept=".json"
-            @change="handleImportData"
             style="display: none"
+            @change="handleImportData"
           />
         </div>
         <div class="data-info">
-          <p v-if="lastSaveTime" class="save-time">
-            上次保存: {{ formatTime(lastSaveTime) }}
-          </p>
+          <p v-if="lastSaveTime" class="save-time">上次保存: {{ formatTime(lastSaveTime) }}</p>
           <p class="auto-save-status">
-            自动保存: <span :class="{ 'saving': isAutoSaving }">
+            自动保存:
+            <span :class="{ saving: isAutoSaving }">
               {{ isAutoSaving ? '保存中...' : '已启用' }}
             </span>
           </p>
@@ -70,15 +75,15 @@
             :class="[
               block.type,
               {
-                'focused': focusedBlockId === block.id,
-                'dimmed': focusedBlockId && focusedBlockId !== block.id,
-                'hovered': hoveredBlockId === block.id,
-                'editing': block.isEditing
-              }
+                focused: focusedBlockId === block.id,
+                dimmed: focusedBlockId && focusedBlockId !== block.id,
+                hovered: hoveredBlockId === block.id,
+                editing: block.isEditing,
+              },
             ]"
+            draggable="true"
             @mouseenter="hoveredBlockId = block.id"
             @mouseleave="hoveredBlockId = null"
-            draggable="true"
             @dragstart="handleDragStart(block.id, $event)"
             @dragover.prevent="handleDragOver($event)"
             @drop="handleDrop(block.id, $event)"
@@ -89,12 +94,12 @@
               <div
                 class="block-icon"
                 :class="{
-                  'visible': hoveredBlockId === block.id,
-                  'focused-icon': focusedBlockId === block.id
+                  visible: hoveredBlockId === block.id,
+                  'focused-icon': focusedBlockId === block.id,
                 }"
+                :title="`${block.type} 块 - 左键菜单，双击聚焦`"
                 @click="showBlockMenu(block.id, $event)"
                 @dblclick="toggleBlockFocus(block.id)"
-                :title="`${block.type} 块 - 左键菜单，双击聚焦`"
               >
                 <span class="block-type-icon">
                   {{ getBlockTypeIcon(block.type) }}
@@ -115,15 +120,15 @@
                 <!-- 编辑模式：纯文本编辑 -->
                 <textarea
                   v-else
+                  ref="blockEditor"
                   v-model="block.content"
-                  @input="(event) => onBlockContentChange(block.id, event)"
-                  @keydown="(event) => handleKeyDown(block.id, event)"
-                  @blur="stopEditBlock(block.id)"
                   class="block-content-editor"
                   :placeholder="`编辑 ${block.type} 块内容...`"
                   :data-block-id="block.id"
                   rows="2"
-                  ref="blockEditor"
+                  @input="event => onBlockContentChange(block.id, event)"
+                  @keydown="event => handleKeyDown(block.id, event)"
+                  @blur="stopEditBlock(block.id)"
                 ></textarea>
               </div>
             </div>
@@ -139,8 +144,6 @@
           </div>
         </div>
       </div>
-
-
     </div>
 
     <!-- 块操作菜单 -->
@@ -178,11 +181,7 @@
     </div>
 
     <!-- 点击遮罩关闭菜单 -->
-    <div
-      v-if="blockMenuVisible"
-      class="menu-overlay"
-      @click="hideBlockMenu"
-    ></div>
+    <div v-if="blockMenuVisible" class="menu-overlay" @click="hideBlockMenu"></div>
 
     <!-- 命令菜单 -->
     <div
@@ -193,11 +192,11 @@
     >
       <div class="command-search">
         <input
+          ref="commandInput"
           v-model="commandMenuFilter"
           placeholder="输入命令..."
           class="command-input"
           @keydown="handleCommandKeyDown"
-          ref="commandInput"
         />
       </div>
       <div class="command-list">
@@ -217,42 +216,38 @@
     </div>
 
     <!-- 命令菜单遮罩 -->
-    <div
-      v-if="commandMenuVisible"
-      class="menu-overlay"
-      @click="hideCommandMenu"
-    ></div>
+    <div v-if="commandMenuVisible" class="menu-overlay" @click="hideCommandMenu"></div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
-import { useCanvasStore, type Block } from '@/store/canvas';
-import { storeToRefs } from 'pinia';
-import { debounce } from 'lodash';
+import { ref, computed, watch, nextTick } from 'vue'
+import { useCanvasStore, type Block } from '@/store/canvas'
+import { storeToRefs } from 'pinia'
+import { debounce } from 'lodash'
 
-const store = useCanvasStore();
-const { cards, selectedCardId, focusedBlockId, isAutoSaving, lastSaveTime } = storeToRefs(store);
+const store = useCanvasStore()
+const { cards, selectedCardId, focusedBlockId, isAutoSaving, lastSaveTime } = storeToRefs(store)
 
-const hoveredBlockId = ref<string | null>(null);
+const hoveredBlockId = ref<string | null>(null)
 
 // 块菜单相关状态
-const blockMenuVisible = ref(false);
-const blockMenuPosition = ref({ x: 0, y: 0 });
-const currentBlockId = ref<string | null>(null);
+const blockMenuVisible = ref(false)
+const blockMenuPosition = ref({ x: 0, y: 0 })
+const currentBlockId = ref<string | null>(null)
 
 // 拖拽相关状态
-const draggedBlockId = ref<string | null>(null);
+const draggedBlockId = ref<string | null>(null)
 
 // 命令菜单相关状态
-const commandMenuVisible = ref(false);
-const commandMenuPosition = ref({ x: 0, y: 0 });
-const commandMenuBlockId = ref<string | null>(null);
-const commandMenuFilter = ref('');
+const commandMenuVisible = ref(false)
+const commandMenuPosition = ref({ x: 0, y: 0 })
+const commandMenuBlockId = ref<string | null>(null)
+const commandMenuFilter = ref('')
 
 // 数据管理面板状态
-const showDataPanel = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
+const showDataPanel = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 // 命令列表
 const commands = ref([
@@ -261,94 +256,83 @@ const commands = ref([
     name: '标题',
     description: '创建标题块',
     icon: '📰',
-    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'heading', '# ')
+    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'heading', '# '),
   },
   {
     id: 'paragraph',
     name: '段落',
     description: '创建段落块',
     icon: '📝',
-    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'paragraph', '')
+    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'paragraph', ''),
   },
   {
     id: 'list',
     name: '列表',
     description: '创建列表块',
     icon: '📋',
-    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'list', '- ')
+    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'list', '- '),
   },
   {
     id: 'code',
     name: '代码',
     description: '创建代码块',
     icon: '💻',
-    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'code', '')
+    action: () => convertBlockTypeAndUpdateContent(commandMenuBlockId.value!, 'code', ''),
   },
   {
     id: 'duplicate',
     name: '复制块',
     description: '复制当前块',
     icon: '📋',
-    action: () => store.duplicateBlock(commandMenuBlockId.value!)
+    action: () => store.duplicateBlock(commandMenuBlockId.value!),
   },
   {
     id: 'delete',
     name: '删除块',
     description: '删除当前块',
     icon: '🗑️',
-    action: () => store.deleteBlock(commandMenuBlockId.value!)
-  }
-]);
+    action: () => store.deleteBlock(commandMenuBlockId.value!),
+  },
+])
 
 /**
  * 过滤后的命令列表
  */
 const filteredCommands = computed(() => {
-  if (!commandMenuFilter.value) return commands.value;
+  if (!commandMenuFilter.value) return commands.value
 
-  const filter = commandMenuFilter.value.toLowerCase();
-  return commands.value.filter(cmd =>
-    cmd.name.toLowerCase().includes(filter) ||
-    cmd.description.toLowerCase().includes(filter)
-  );
-});
+  const filter = commandMenuFilter.value.toLowerCase()
+  return commands.value.filter(
+    cmd => cmd.name.toLowerCase().includes(filter) || cmd.description.toLowerCase().includes(filter)
+  )
+})
 
 /**
  * Finds the currently selected card from the store based on selectedCardId.
  * @returns {Card | undefined} The selected card object or undefined if no card is selected.
  */
 const selectedCard = computed(() => {
-  if (selectedCardId.value === null) return undefined;
-  return cards.value.find((card: any) => card.id === selectedCardId.value);
-});
-
-
-
-
-
-
+  if (selectedCardId.value === null) return undefined
+  return cards.value.find((card: any) => card.id === selectedCardId.value)
+})
 
 /**
  * Debounced function to update the card's title in the store.
  */
 const debouncedTitleUpdate = debounce((newTitle: string) => {
   if (selectedCard.value) {
-    store.updateCard({ id: selectedCard.value.id, title: newTitle });
+    store.updateCard({ id: selectedCard.value.id, title: newTitle })
   }
-}, 300);
+}, 300)
 
 /**
  * 处理标题变化
  */
 const handleTitleChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const newTitle = target.value;
-  debouncedTitleUpdate(newTitle);
-};
-
-
-
-
+  const target = event.target as HTMLInputElement
+  const newTitle = target.value
+  debouncedTitleUpdate(newTitle)
+}
 
 /**
  * Handles the click event for the delete button.
@@ -356,542 +340,556 @@ const handleTitleChange = (event: Event) => {
  */
 const handleDelete = () => {
   if (selectedCard.value) {
-    store.removeCard(selectedCard.value.id);
+    store.removeCard(selectedCard.value.id)
   }
-};
+}
 
 /**
  * 获取块类型对应的图标
  */
 const getBlockTypeIcon = (type: string): string => {
   switch (type) {
-    case 'heading': return '🔖';
-    case 'paragraph': return '📄';
-    case 'list': return '📝';
-    case 'code': return '⚡';
-    default: return '📋';
+    case 'heading':
+      return '🔖'
+    case 'paragraph':
+      return '📄'
+    case 'list':
+      return '📝'
+    case 'code':
+      return '⚡'
+    default:
+      return '📋'
   }
-};
-
-
-
-
+}
 
 /**
  * 自动调整textarea高度
  */
 const autoResizeTextarea = (textarea: HTMLTextAreaElement) => {
-  textarea.style.height = 'auto';
-  textarea.style.height = textarea.scrollHeight + 'px';
-};
+  textarea.style.height = 'auto'
+  textarea.style.height = textarea.scrollHeight + 'px'
+}
 
 /**
  * 处理单个块内容变化
  */
 const onBlockContentChange = (blockId: string, event: Event) => {
-  const target = event.target as HTMLTextAreaElement;
-  const newContent = target.value;
+  const target = event.target as HTMLTextAreaElement
+  const newContent = target.value
 
   // 自动调整高度
-  autoResizeTextarea(target);
+  autoResizeTextarea(target)
 
   // 使用新的 updateBlock 方法更新单个块
-  store.updateBlock(blockId, { content: newContent });
+  store.updateBlock(blockId, { content: newContent })
 
   // 同时更新卡片的整体内容
   if (selectedCard.value) {
-    const allContent = selectedCard.value.blocks.map(b => b.content).join('\n\n');
-    selectedCard.value.content = allContent;
+    const allContent = selectedCard.value.blocks.map(b => b.content).join('\n\n')
+    selectedCard.value.content = allContent
   }
-};
+}
 
 /**
  * 渲染块内容，包含引用高亮
  */
 const renderBlockContent = (content: string) => {
-  return store.renderContentWithReferences(content);
-};
+  return store.renderContentWithReferences(content)
+}
 
 /**
  * 开始编辑块
  */
 const startEditBlock = (blockId: string) => {
   if (selectedCard.value) {
-    const block = selectedCard.value.blocks.find(b => b.id === blockId);
+    const block = selectedCard.value.blocks.find(b => b.id === blockId)
     if (block) {
-      block.isEditing = true;
+      block.isEditing = true
       // 下一帧聚焦到编辑器并调整高度
       nextTick(() => {
-        const editor = document.querySelector(`textarea[data-block-id="${blockId}"]`) as HTMLTextAreaElement;
+        const editor = document.querySelector(
+          `textarea[data-block-id="${blockId}"]`
+        ) as HTMLTextAreaElement
         if (editor) {
-          editor.focus();
-          autoResizeTextarea(editor);
+          editor.focus()
+          autoResizeTextarea(editor)
         }
-      });
+      })
     }
   }
-};
+}
 
 /**
  * 停止编辑块
  */
 const stopEditBlock = (blockId: string) => {
   if (selectedCard.value) {
-    const block = selectedCard.value.blocks.find(b => b.id === blockId);
+    const block = selectedCard.value.blocks.find(b => b.id === blockId)
     if (block) {
-      block.isEditing = false;
+      block.isEditing = false
     }
   }
-};
+}
 
 /**
  * 处理引用点击事件
  */
 const handleReferenceClick = (event: Event) => {
-  const target = event.target as HTMLElement;
+  const target = event.target as HTMLElement
   if (target.classList.contains('block-reference') || target.classList.contains('block-embed')) {
-    const blockId = target.getAttribute('data-block-id');
+    const blockId = target.getAttribute('data-block-id')
     if (blockId) {
-      navigateToBlock(blockId);
+      navigateToBlock(blockId)
     }
   }
-};
+}
 
 /**
  * 导航到指定块
  */
 const navigateToBlock = (blockId: string) => {
-  const targetCard = store.findCardByBlockId(blockId);
+  const targetCard = store.findCardByBlockId(blockId)
   if (targetCard) {
     // 选中包含目标块的卡片
-    store.selectCard(targetCard.id);
+    store.selectCard(targetCard.id)
 
     // 滚动到目标块
     nextTick(() => {
-      const blockElement = document.querySelector(`[data-block-id="${blockId}"]`);
+      const blockElement = document.querySelector(`[data-block-id="${blockId}"]`)
       if (blockElement) {
-        blockElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        blockElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
         // 高亮显示目标块
-        blockElement.classList.add('highlight-target');
+        blockElement.classList.add('highlight-target')
         setTimeout(() => {
-          blockElement.classList.remove('highlight-target');
-        }, 2000);
+          blockElement.classList.remove('highlight-target')
+        }, 2000)
       }
-    });
+    })
   }
-};
+}
 
 /**
  * 显示块操作菜单
  */
 const showBlockMenu = (blockId: string, event: MouseEvent) => {
-  currentBlockId.value = blockId;
+  currentBlockId.value = blockId
   blockMenuPosition.value = {
     x: event.clientX,
-    y: event.clientY
-  };
-  blockMenuVisible.value = true;
-};
+    y: event.clientY,
+  }
+  blockMenuVisible.value = true
+}
 
 /**
  * 隐藏块操作菜单
  */
 const hideBlockMenu = () => {
-  blockMenuVisible.value = false;
-  currentBlockId.value = null;
-};
+  blockMenuVisible.value = false
+  currentBlockId.value = null
+}
 
 /**
  * 复制当前块
  */
 const duplicateCurrentBlock = () => {
   if (currentBlockId.value) {
-    store.duplicateBlock(currentBlockId.value);
+    store.duplicateBlock(currentBlockId.value)
   }
-  hideBlockMenu();
-};
+  hideBlockMenu()
+}
 
 /**
  * 删除当前块
  */
 const deleteCurrentBlock = () => {
   if (currentBlockId.value) {
-    store.deleteBlock(currentBlockId.value);
+    store.deleteBlock(currentBlockId.value)
   }
-  hideBlockMenu();
-};
+  hideBlockMenu()
+}
 
 /**
  * 转换块类型
  */
 const convertBlockType = (newType: Block['type']) => {
   if (currentBlockId.value) {
-    store.convertBlockType(currentBlockId.value, newType);
+    store.convertBlockType(currentBlockId.value, newType)
   }
-  hideBlockMenu();
-};
+  hideBlockMenu()
+}
 
 /**
  * 处理拖拽开始
  */
 const handleDragStart = (blockId: string, event: DragEvent) => {
-  draggedBlockId.value = blockId;
+  draggedBlockId.value = blockId
   if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', blockId);
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', blockId)
   }
-};
+}
 
 /**
  * 处理拖拽悬停
  */
 const handleDragOver = (event: DragEvent) => {
-  event.preventDefault();
+  event.preventDefault()
   if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = 'move'
   }
-};
+}
 
 /**
  * 处理拖拽放置
  */
 const handleDrop = (targetBlockId: string, event: DragEvent) => {
-  event.preventDefault();
+  event.preventDefault()
 
   if (draggedBlockId.value && draggedBlockId.value !== targetBlockId && selectedCard.value) {
     // 找到目标块的索引
-    const targetIndex = selectedCard.value.blocks.findIndex(b => b.id === targetBlockId);
+    const targetIndex = selectedCard.value.blocks.findIndex(b => b.id === targetBlockId)
     if (targetIndex !== -1) {
       // 移动块到目标位置
-      store.moveBlock(draggedBlockId.value, targetIndex);
+      store.moveBlock(draggedBlockId.value, targetIndex)
     }
   }
-};
+}
 
 /**
  * 处理拖拽结束
  */
 const handleDragEnd = () => {
-  draggedBlockId.value = null;
-};
+  draggedBlockId.value = null
+}
 
 /**
  * 处理键盘事件
  */
 const handleKeyDown = (blockId: string, event: KeyboardEvent) => {
-  const target = event.target as HTMLTextAreaElement;
-  const content = target.value;
-  const cursorPosition = target.selectionStart;
+  const target = event.target as HTMLTextAreaElement
+  const content = target.value
+  const cursorPosition = target.selectionStart
 
   // Ctrl+Enter 停止编辑
   if (event.ctrlKey && event.key === 'Enter') {
-    event.preventDefault();
-    stopEditBlock(blockId);
-    return;
+    event.preventDefault()
+    stopEditBlock(blockId)
+    return
   }
 
   // Enter 键处理
   if (event.key === 'Enter') {
     // 检查是否在行首输入 Markdown 语法
-    const lines = content.split('\n');
-    const currentLineIndex = content.substring(0, cursorPosition).split('\n').length - 1;
-    const currentLine = lines[currentLineIndex] || '';
+    const lines = content.split('\n')
+    const currentLineIndex = content.substring(0, cursorPosition).split('\n').length - 1
+    const currentLine = lines[currentLineIndex] || ''
 
     // 检查 Markdown 快捷键
     if (currentLine.trim() === '#') {
-      event.preventDefault();
-      convertBlockTypeAndUpdateContent(blockId, 'heading', '# ');
-      return;
+      event.preventDefault()
+      convertBlockTypeAndUpdateContent(blockId, 'heading', '# ')
+      return
     }
 
     if (currentLine.trim() === '##') {
-      event.preventDefault();
-      convertBlockTypeAndUpdateContent(blockId, 'heading', '## ');
-      return;
+      event.preventDefault()
+      convertBlockTypeAndUpdateContent(blockId, 'heading', '## ')
+      return
     }
 
     if (currentLine.trim() === '###') {
-      event.preventDefault();
-      convertBlockTypeAndUpdateContent(blockId, 'heading', '### ');
-      return;
+      event.preventDefault()
+      convertBlockTypeAndUpdateContent(blockId, 'heading', '### ')
+      return
     }
 
     if (currentLine.trim() === '-' || currentLine.trim() === '*') {
-      event.preventDefault();
-      convertBlockTypeAndUpdateContent(blockId, 'list', '- ');
-      return;
+      event.preventDefault()
+      convertBlockTypeAndUpdateContent(blockId, 'list', '- ')
+      return
     }
 
     if (currentLine.trim() === '```') {
-      event.preventDefault();
-      convertBlockTypeAndUpdateContent(blockId, 'code', '');
-      return;
+      event.preventDefault()
+      convertBlockTypeAndUpdateContent(blockId, 'code', '')
+      return
     }
 
     // 如果没有匹配到Markdown语法，且光标在行末，创建新块
-    if (cursorPosition === content.length ||
-        (currentLineIndex === lines.length - 1 && cursorPosition >= content.lastIndexOf('\n') + currentLine.length)) {
-      event.preventDefault();
-      createNewBlockAfter(blockId);
-      return;
+    if (
+      cursorPosition === content.length ||
+      (currentLineIndex === lines.length - 1 &&
+        cursorPosition >= content.lastIndexOf('\n') + currentLine.length)
+    ) {
+      event.preventDefault()
+      createNewBlockAfter(blockId)
+      return
     }
   }
 
   // / 键处理 - 显示命令菜单
   if (event.key === '/' && cursorPosition === 0) {
-    event.preventDefault();
-    showCommandMenu(blockId, target);
-    return;
+    event.preventDefault()
+    showCommandMenu(blockId, target)
+    return
   }
 
   // Tab 键处理 - 缩进
   if (event.key === 'Tab') {
-    event.preventDefault();
-    const start = target.selectionStart;
-    const end = target.selectionEnd;
+    event.preventDefault()
+    const start = target.selectionStart
+    const end = target.selectionEnd
 
     if (event.shiftKey) {
       // Shift+Tab 减少缩进
-      const beforeCursor = content.substring(0, start);
-      const afterCursor = content.substring(end);
+      const beforeCursor = content.substring(0, start)
+      const afterCursor = content.substring(end)
       if (beforeCursor.endsWith('  ')) {
-        target.value = beforeCursor.slice(0, -2) + afterCursor;
-        target.setSelectionRange(start - 2, start - 2);
+        target.value = beforeCursor.slice(0, -2) + afterCursor
+        target.setSelectionRange(start - 2, start - 2)
       }
     } else {
       // Tab 增加缩进
-      target.value = content.substring(0, start) + '  ' + content.substring(end);
-      target.setSelectionRange(start + 2, start + 2);
+      target.value = content.substring(0, start) + '  ' + content.substring(end)
+      target.setSelectionRange(start + 2, start + 2)
     }
 
     // 触发 input 事件更新内容
-    onBlockContentChange(blockId, { target } as any);
+    onBlockContentChange(blockId, { target } as any)
   }
-};
+}
 
 /**
  * 转换块类型并更新内容
  */
-const convertBlockTypeAndUpdateContent = (blockId: string, newType: Block['type'], newContent: string) => {
-  store.convertBlockType(blockId, newType);
+const convertBlockTypeAndUpdateContent = (
+  blockId: string,
+  newType: Block['type'],
+  newContent: string
+) => {
+  store.convertBlockType(blockId, newType)
 
   // 更新块内容
   if (selectedCard.value) {
-    const block = selectedCard.value.blocks.find(b => b.id === blockId);
+    const block = selectedCard.value.blocks.find(b => b.id === blockId)
     if (block) {
-      block.content = newContent;
-      store.updateBlock(blockId, { content: newContent });
+      block.content = newContent
+      store.updateBlock(blockId, { content: newContent })
 
       // 聚焦到编辑器末尾
       nextTick(() => {
-        const editor = document.querySelector(`textarea[data-block-id="${blockId}"]`) as HTMLTextAreaElement;
+        const editor = document.querySelector(
+          `textarea[data-block-id="${blockId}"]`
+        ) as HTMLTextAreaElement
         if (editor) {
-          editor.focus();
-          editor.setSelectionRange(newContent.length, newContent.length);
+          editor.focus()
+          editor.setSelectionRange(newContent.length, newContent.length)
         }
-      });
+      })
     }
   }
-};
+}
 
 /**
  * 显示命令菜单
  */
 const showCommandMenu = (blockId: string, target: HTMLTextAreaElement) => {
-  commandMenuBlockId.value = blockId;
-  commandMenuFilter.value = '';
+  commandMenuBlockId.value = blockId
+  commandMenuFilter.value = ''
 
   // 计算菜单位置
-  const rect = target.getBoundingClientRect();
+  const rect = target.getBoundingClientRect()
   commandMenuPosition.value = {
     x: rect.left,
-    y: rect.bottom + 5
-  };
+    y: rect.bottom + 5,
+  }
 
-  commandMenuVisible.value = true;
+  commandMenuVisible.value = true
 
   // 聚焦到搜索框
   nextTick(() => {
-    const input = document.querySelector('.command-input') as HTMLInputElement;
+    const input = document.querySelector('.command-input') as HTMLInputElement
     if (input) {
-      input.focus();
+      input.focus()
     }
-  });
-};
+  })
+}
 
 /**
  * 隐藏命令菜单
  */
 const hideCommandMenu = () => {
-  commandMenuVisible.value = false;
-  commandMenuBlockId.value = null;
-  commandMenuFilter.value = '';
-};
+  commandMenuVisible.value = false
+  commandMenuBlockId.value = null
+  commandMenuFilter.value = ''
+}
 
 /**
  * 执行命令
  */
 const executeCommand = (command: any) => {
-  command.action();
-  hideCommandMenu();
-};
+  command.action()
+  hideCommandMenu()
+}
 
 /**
  * 处理命令菜单键盘事件
  */
 const handleCommandKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape') {
-    event.preventDefault();
-    hideCommandMenu();
+    event.preventDefault()
+    hideCommandMenu()
   } else if (event.key === 'Enter') {
-    event.preventDefault();
-    const filtered = filteredCommands.value;
+    event.preventDefault()
+    const filtered = filteredCommands.value
     if (filtered.length > 0) {
-      executeCommand(filtered[0]);
+      executeCommand(filtered[0])
     }
   }
-};
+}
 
 /**
  * 切换块聚焦模式
  */
 const toggleBlockFocus = (blockId: string) => {
-  store.toggleFocusMode(blockId);
-};
+  store.toggleFocusMode(blockId)
+}
 
 /**
  * 手动保存数据
  */
 const handleSaveData = () => {
-  const success = store.saveToLocalStorage();
+  const success = store.saveToLocalStorage()
   if (success) {
-    alert('数据保存成功！');
+    alert('数据保存成功！')
   } else {
-    alert('数据保存失败！');
+    alert('数据保存失败！')
   }
-};
+}
 
 /**
  * 导出数据
  */
 const handleExportData = () => {
   try {
-    const data = store.exportData();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const data = store.exportData()
+    const blob = new Blob([data], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `yunyan-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `yunyan-export-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
 
-    alert('数据导出成功！');
+    alert('数据导出成功！')
   } catch (error) {
-    console.error('导出失败:', error);
-    alert('数据导出失败！');
+    console.error('导出失败:', error)
+    alert('数据导出失败！')
   }
-};
+}
 
 /**
  * 触发文件选择
  */
 const triggerImport = () => {
-  fileInput.value?.click();
-};
+  fileInput.value?.click()
+}
 
 /**
  * 导入数据
  */
 const handleImportData = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
 
   if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    const reader = new FileReader()
+    reader.onload = e => {
       try {
-        const content = e.target?.result as string;
-        const success = store.importData(content);
+        const content = e.target?.result as string
+        const success = store.importData(content)
 
         if (success) {
-          alert('数据导入成功！');
-          showDataPanel.value = false;
+          alert('数据导入成功！')
+          showDataPanel.value = false
         } else {
-          alert('数据导入失败：格式不正确！');
+          alert('数据导入失败：格式不正确！')
         }
       } catch (error) {
-        console.error('导入失败:', error);
-        alert('数据导入失败！');
+        console.error('导入失败:', error)
+        alert('数据导入失败！')
       }
-    };
-    reader.readAsText(file);
+    }
+    reader.readAsText(file)
   }
 
   // 清空文件输入
-  target.value = '';
-};
+  target.value = ''
+}
 
 /**
  * 格式化时间显示
  */
 const formatTime = (date: Date | null) => {
-  if (!date) return '';
+  if (!date) return ''
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
-  }).format(new Date(date));
-};
+    second: '2-digit',
+  }).format(new Date(date))
+}
 
 /**
  * 添加新块
  */
 const addNewBlock = () => {
   if (selectedCard.value) {
-    const newBlock = store.addBlock(selectedCard.value.id, 'paragraph', '');
+    const newBlock = store.addBlock(selectedCard.value.id, 'paragraph', '')
     if (newBlock) {
       // 自动进入编辑模式
       nextTick(() => {
-        const blockElement = document.querySelector(`[data-block-id="${newBlock.id}"] .block-content-display`);
+        const blockElement = document.querySelector(
+          `[data-block-id="${newBlock.id}"] .block-content-display`
+        )
         if (blockElement) {
-          (blockElement as HTMLElement).click();
+          ;(blockElement as HTMLElement).click()
         }
-      });
+      })
     }
   }
-};
+}
 
 /**
  * 在指定块后创建新块
  */
 const createNewBlockAfter = (blockId: string) => {
   if (selectedCard.value) {
-    const currentBlockIndex = selectedCard.value.blocks.findIndex(b => b.id === blockId);
+    const currentBlockIndex = selectedCard.value.blocks.findIndex(b => b.id === blockId)
     if (currentBlockIndex !== -1) {
-      const newBlock = store.addBlock(selectedCard.value.id, 'paragraph', '', currentBlockIndex + 1);
+      const newBlock = store.addBlock(selectedCard.value.id, 'paragraph', '', currentBlockIndex + 1)
       if (newBlock) {
         // 停止当前块的编辑
-        stopEditBlock(blockId);
+        stopEditBlock(blockId)
 
         // 自动进入新块的编辑模式
         nextTick(() => {
-          const blockElement = document.querySelector(`[data-block-id="${newBlock.id}"] .block-content-display`);
+          const blockElement = document.querySelector(
+            `[data-block-id="${newBlock.id}"] .block-content-display`
+          )
           if (blockElement) {
-            (blockElement as HTMLElement).click();
+            ;(blockElement as HTMLElement).click()
           }
-        });
+        })
       }
     }
   }
-};
-
-
+}
 </script>
 
 <style scoped>
@@ -1076,8 +1074,6 @@ textarea {
   opacity: 1;
 }
 
-
-
 /* 块内容编辑区域 */
 .block-content-area {
   flex: 1;
@@ -1165,9 +1161,15 @@ textarea {
 }
 
 @keyframes highlightPulse {
-  0% { background-color: rgba(255, 193, 7, 0.3); }
-  50% { background-color: rgba(255, 193, 7, 0.6); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: rgba(255, 193, 7, 0.3);
+  }
+  50% {
+    background-color: rgba(255, 193, 7, 0.6);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 /* 块操作菜单 */
@@ -1217,11 +1219,11 @@ textarea {
 }
 
 /* 拖拽样式 */
-.block-item[draggable="true"] {
+.block-item[draggable='true'] {
   cursor: grab;
 }
 
-.block-item[draggable="true"]:active {
+.block-item[draggable='true']:active {
   cursor: grabbing;
 }
 
@@ -1512,5 +1514,4 @@ textarea {
   color: #6c757d;
   font-style: italic;
 }
-
 </style>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import Sidebar from '@/components/sidebar/Sidebar.vue';
-import KeyboardShortcutsHelp from '@/components/ui/KeyboardShortcutsHelp.vue';
-import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import Sidebar from '@/components/sidebar/Sidebar.vue'
+import KeyboardShortcutsHelp from '@/components/ui/KeyboardShortcutsHelp.vue'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 
 // 初始化键盘快捷键
-useKeyboardShortcuts();
+useKeyboardShortcuts()
 </script>
 
 <template>
@@ -72,7 +72,9 @@ nav a {
   text-decoration: none;
   margin: 0 1rem;
   padding: 0.5rem 0;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 nav a:hover {
@@ -89,7 +91,9 @@ nav a.router-link-exact-active {
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
 
   --color-bg-primary: #f8f9fa; /* Off-white main background */
   --color-bg-secondary: #ffffff; /* White for cards, sidebars */

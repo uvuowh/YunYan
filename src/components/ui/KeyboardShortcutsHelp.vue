@@ -1,15 +1,18 @@
 <template>
   <div class="keyboard-shortcuts-help">
     <!-- 触发按钮 -->
-    <button 
-      @click="showModal = true"
-      class="help-button"
-      title="键盘快捷键帮助 (F1)"
-    >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-        <line x1="12" y1="17" x2="12.01" y2="17"/>
+    <button class="help-button" title="键盘快捷键帮助 (F1)" @click="showModal = true">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
     </button>
 
@@ -18,22 +21,35 @@
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h2>键盘快捷键</h2>
-          <button @click="closeModal" class="close-button">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+          <button class="close-button" @click="closeModal">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="shortcuts-grid">
             <div v-for="category in categorizedShortcuts" :key="category.name" class="category">
               <h3>{{ category.name }}</h3>
               <div class="shortcuts-list">
-                <div v-for="shortcut in category.shortcuts" :key="shortcut.description" class="shortcut-item">
+                <div
+                  v-for="shortcut in category.shortcuts"
+                  :key="shortcut.description"
+                  class="shortcut-item"
+                >
                   <div class="shortcut-keys">
-                    <kbd v-for="key in formatShortcutKeys(shortcut)" :key="key" class="key">{{ key }}</kbd>
+                    <kbd v-for="key in formatShortcutKeys(shortcut)" :key="key" class="key">{{
+                      key
+                    }}</kbd>
                   </div>
                   <div class="shortcut-description">{{ shortcut.description }}</div>
                 </div>
@@ -41,7 +57,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <p class="tip">提示：按 <kbd>F1</kbd> 可以快速打开此帮助</p>
         </div>
@@ -51,112 +67,114 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useKeyboardShortcuts, type KeyboardShortcut } from '@/composables/useKeyboardShortcuts';
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useKeyboardShortcuts, type KeyboardShortcut } from '@/composables/useKeyboardShortcuts'
 
-const showModal = ref(false);
-const shortcuts = useKeyboardShortcuts();
+const showModal = ref(false)
+const shortcuts = useKeyboardShortcuts()
 
 // 分类快捷键
 const categorizedShortcuts = computed(() => {
-  const allShortcuts = shortcuts.getShortcuts();
-  
+  const allShortcuts = shortcuts.getShortcuts()
+
   const categories = [
     {
       name: '编辑操作',
-      shortcuts: allShortcuts.filter(s => 
-        s.description.includes('撤销') || 
-        s.description.includes('重做') || 
-        s.description.includes('删除') || 
-        s.description.includes('复制') ||
-        s.description.includes('编辑') ||
-        s.description.includes('重命名')
-      )
+      shortcuts: allShortcuts.filter(
+        s =>
+          s.description.includes('撤销') ||
+          s.description.includes('重做') ||
+          s.description.includes('删除') ||
+          s.description.includes('复制') ||
+          s.description.includes('编辑') ||
+          s.description.includes('重命名')
+      ),
     },
     {
       name: '文件操作',
-      shortcuts: allShortcuts.filter(s => 
-        s.description.includes('保存') || 
-        s.description.includes('打开') || 
-        s.description.includes('新建')
-      )
+      shortcuts: allShortcuts.filter(
+        s =>
+          s.description.includes('保存') ||
+          s.description.includes('打开') ||
+          s.description.includes('新建')
+      ),
     },
     {
       name: '选择操作',
-      shortcuts: allShortcuts.filter(s => 
-        s.description.includes('全选') || 
-        s.description.includes('取消选择')
-      )
+      shortcuts: allShortcuts.filter(
+        s => s.description.includes('全选') || s.description.includes('取消选择')
+      ),
     },
     {
       name: '视图操作',
-      shortcuts: allShortcuts.filter(s => 
-        s.description.includes('放大') || 
-        s.description.includes('缩小') || 
-        s.description.includes('重置缩放')
-      )
-    }
-  ];
-  
-  return categories.filter(category => category.shortcuts.length > 0);
-});
+      shortcuts: allShortcuts.filter(
+        s =>
+          s.description.includes('放大') ||
+          s.description.includes('缩小') ||
+          s.description.includes('重置缩放')
+      ),
+    },
+  ]
+
+  return categories.filter(category => category.shortcuts.length > 0)
+})
 
 // 格式化快捷键显示
 function formatShortcutKeys(shortcut: KeyboardShortcut): string[] {
-  const keys: string[] = [];
-  
-  if (shortcut.ctrlKey) keys.push('Ctrl');
-  if (shortcut.shiftKey) keys.push('Shift');
-  if (shortcut.altKey) keys.push('Alt');
-  if (shortcut.metaKey) keys.push('Cmd');
-  
+  const keys: string[] = []
+
+  if (shortcut.ctrlKey) keys.push('Ctrl')
+  if (shortcut.shiftKey) keys.push('Shift')
+  if (shortcut.altKey) keys.push('Alt')
+  if (shortcut.metaKey) keys.push('Cmd')
+
   // 特殊键名映射
   const keyMap: { [key: string]: string } = {
-    'Delete': 'Delete',
-    'Backspace': 'Backspace',
-    'Escape': 'Esc',
-    'Enter': 'Enter',
-    'F1': 'F1',
-    'F2': 'F2',
+    Delete: 'Delete',
+    Backspace: 'Backspace',
+    Escape: 'Esc',
+    Enter: 'Enter',
+    F1: 'F1',
+    F2: 'F2',
     '+': '+',
     '-': '-',
-    '0': '0'
-  };
-  
-  const displayKey = keyMap[shortcut.key] || shortcut.key.toUpperCase();
-  keys.push(displayKey);
-  
-  return keys;
+    '0': '0',
+  }
+
+  const displayKey = keyMap[shortcut.key] || shortcut.key.toUpperCase()
+  keys.push(displayKey)
+
+  return keys
 }
 
 function closeModal() {
-  showModal.value = false;
+  showModal.value = false
 }
 
 // F1 快捷键处理
 function handleF1(event: KeyboardEvent) {
   if (event.key === 'F1') {
-    event.preventDefault();
-    showModal.value = !showModal.value;
+    event.preventDefault()
+    showModal.value = !showModal.value
   }
 }
 
 // ESC 关闭模态框
 function handleEscape(event: KeyboardEvent) {
   if (event.key === 'Escape' && showModal.value) {
-    closeModal();
+    closeModal()
   }
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handleF1);
-  document.addEventListener('keydown', handleEscape);
-});
+  document.addEventListener('keydown', handleF1)
+  document.addEventListener('keydown', handleEscape)
+})
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleF1);
-  document.removeEventListener('keydown', handleEscape);
-});
+  document.removeEventListener('keydown', handleF1)
+  document.removeEventListener('keydown', handleEscape)
+})
 </script>
 
 <style scoped>
@@ -289,7 +307,8 @@ onUnmounted(() => {
   background: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-family:
+    'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--color-text);
@@ -333,17 +352,17 @@ onUnmounted(() => {
     width: 95%;
     max-height: 90vh;
   }
-  
+
   .shortcuts-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .shortcut-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-  
+
   .shortcut-description {
     text-align: left;
     margin-left: 0;

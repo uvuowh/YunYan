@@ -3,13 +3,15 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [vue({
-    template: {
-      compilerOptions: {
-        isCustomElement: (tag) => tag.startsWith('v-')
-      }
-    }
-  })],
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: tag => tag.startsWith('v-'),
+        },
+      },
+    }),
+  ],
   test: {
     environment: 'happy-dom',
     globals: true,
@@ -25,21 +27,21 @@ export default defineConfig({
         'dist/',
         '**/*.d.ts',
         'vite.config.ts',
-        'vitest.config.ts'
+        'vitest.config.ts',
       ],
       thresholds: {
         global: {
           branches: 80,
           functions: 80,
           lines: 80,
-          statements: 80
-        }
-      }
-    }
+          statements: 80,
+        },
+      },
+    },
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src')
-    }
-  }
+      '@': resolve(__dirname, './src'),
+    },
+  },
 })

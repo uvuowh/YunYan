@@ -8,7 +8,7 @@ export const mockCards: Card[] = [
     width: 200,
     height: 150,
     title: 'Test Card 1',
-    content: 'This is test content for card 1'
+    content: 'This is test content for card 1',
   },
   {
     id: 'card-2',
@@ -17,7 +17,7 @@ export const mockCards: Card[] = [
     width: 200,
     height: 150,
     title: 'Test Card 2',
-    content: 'This is test content for card 2'
+    content: 'This is test content for card 2',
   },
   {
     id: 'card-3',
@@ -26,8 +26,8 @@ export const mockCards: Card[] = [
     width: 200,
     height: 150,
     title: 'Test Card 3',
-    content: 'This is test content for card 3'
-  }
+    content: 'This is test content for card 3',
+  },
 ]
 
 export const mockConnections: Connection[] = [
@@ -35,14 +35,14 @@ export const mockConnections: Connection[] = [
     id: 'connection-1',
     from: 'card-1',
     to: 'card-2',
-    type: 'one-way'
+    type: 'one-way',
   },
   {
     id: 'connection-2',
     from: 'card-2',
     to: 'card-3',
-    type: 'two-way'
-  }
+    type: 'two-way',
+  },
 ]
 
 export const createMockCard = (overrides: Partial<Card> = {}): Card => ({
@@ -53,7 +53,7 @@ export const createMockCard = (overrides: Partial<Card> = {}): Card => ({
   height: 150,
   title: 'Mock Card',
   content: 'Mock content',
-  ...overrides
+  ...overrides,
 })
 
 export const createMockConnection = (overrides: Partial<Connection> = {}): Connection => ({
@@ -61,7 +61,7 @@ export const createMockConnection = (overrides: Partial<Connection> = {}): Conne
   from: 'card-1',
   to: 'card-2',
   type: 'one-way',
-  ...overrides
+  ...overrides,
 })
 
 export const mockCanvasState = {
@@ -69,5 +69,5 @@ export const mockCanvasState = {
   connections: mockConnections,
   selectedCardId: null,
   canvasWidth: 1200,
-  canvasHeight: 800
+  canvasHeight: 800,
 }

@@ -16,12 +16,12 @@ describe('CanvasCard', () => {
     width: 200,
     height: 150,
     title: 'Test Card',
-    content: 'Test content'
+    content: 'Test content',
   }
 
   it('renders card with correct props', () => {
     const wrapper = mount(CanvasCard, {
-      props: defaultProps
+      props: defaultProps,
     })
 
     expect(wrapper.exists()).toBe(true)
@@ -33,13 +33,13 @@ describe('CanvasCard', () => {
     const selectCardSpy = vi.spyOn(store, 'selectCard')
 
     const wrapper = mount(CanvasCard, {
-      props: defaultProps
+      props: defaultProps,
     })
 
     // Simulate left click
     const mockEvent = {
       evt: { button: 0, ctrlKey: false, metaKey: false },
-      cancelBubble: false
+      cancelBubble: false,
     }
 
     // Access the component instance to test the method
@@ -54,16 +54,16 @@ describe('CanvasCard', () => {
     const manageConnectionSpy = vi.spyOn(store, 'manageConnection')
 
     const wrapper = mount(CanvasCard, {
-      props: defaultProps
+      props: defaultProps,
     })
 
     // Simulate right click
     const mockEvent = {
       evt: {
         button: 2,
-        preventDefault: vi.fn()
+        preventDefault: vi.fn(),
       },
-      cancelBubble: false
+      cancelBubble: false,
     }
 
     const component = wrapper.vm as any
@@ -76,7 +76,7 @@ describe('CanvasCard', () => {
 
   it('updates position when props change', async () => {
     const wrapper = mount(CanvasCard, {
-      props: defaultProps
+      props: defaultProps,
     })
 
     await wrapper.setProps({ x: 200, y: 250 })
