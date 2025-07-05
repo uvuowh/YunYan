@@ -18,6 +18,7 @@
 ### 🌐 扩展工具 (可选)
 
 - **brave-search** - 网络搜索
+- **playwright** - E2E 测试自动化和浏览器操作
 
 ## 🚀 配置方法
 
@@ -88,6 +89,18 @@ Environment Variables:
   LOG_LEVEL: info
 ```
 
+**🎭 配置 6: playwright (可选)**
+
+```
+Name: playwright
+Command: npx
+Args: -y mcp-playwright
+Environment Variables:
+  LOG_LEVEL: info
+  PLAYWRIGHT_BROWSERS_PATH: /Users/uvu/YunYan/node_modules/@playwright/test
+  PLAYWRIGHT_CONFIG_PATH: /Users/uvu/YunYan/playwright.config.ts
+```
+
 #### 步骤 3: 重启编辑器
 
 配置完成后重启 VS Code 或你的编辑器。
@@ -151,6 +164,16 @@ Environment Variables:
           "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE",
           "LOG_LEVEL": "info"
         }
+      },
+      {
+        "name": "playwright",
+        "command": "npx",
+        "args": ["-y", "mcp-playwright"],
+        "env": {
+          "LOG_LEVEL": "info",
+          "PLAYWRIGHT_BROWSERS_PATH": "/Users/uvu/YunYan/node_modules/@playwright/test",
+          "PLAYWRIGHT_CONFIG_PATH": "/Users/uvu/YunYan/playwright.config.ts"
+        }
       }
     ]
   }
@@ -203,6 +226,15 @@ Environment Variables:
 "搜索 Canvas 拖拽最佳实践"
 "查找 Vue 3 性能优化技巧"
 "搜索最新的前端开发趋势"
+```
+
+### 🎭 E2E 测试自动化
+
+```
+"运行 E2E 测试并分析结果"
+"打开应用首页并截图"
+"测试拖拽功能是否正常"
+"生成测试报告"
 ```
 
 ### 💬 交互反馈 (自动)

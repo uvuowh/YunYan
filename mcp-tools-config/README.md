@@ -37,6 +37,7 @@ mcp-tools-config/
 
 - **brave-search** - 网络搜索，用于广泛概念和行业实践搜索
 - **tavily-search** - 备选网络搜索工具
+- **playwright** - E2E 测试自动化，支持浏览器操作和测试执行
 
 ## 🚀 快速开始
 
@@ -113,6 +114,7 @@ mcp-tools-config/
 
 - [项目规则](../rules.md) - 工具使用规范和优先级
 - [Shrimp Task Manager 指南](../docs/shrimp-task-manager-guide.md)
+- [Playwright MCP 工具指南](./playwright-mcp-guide.md) - E2E 测试自动化配置
 - [MCP 官方文档](https://modelcontextprotocol.io/)
 
 ## 🆘 获取帮助

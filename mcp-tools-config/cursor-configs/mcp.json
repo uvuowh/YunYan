@@ -38,6 +38,15 @@
         "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE",
         "LOG_LEVEL": "info"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "mcp-playwright"],
+      "env": {
+        "LOG_LEVEL": "info",
+        "PLAYWRIGHT_BROWSERS_PATH": "/Users/uvu/YunYan/node_modules/@playwright/test",
+        "PLAYWRIGHT_CONFIG_PATH": "/Users/uvu/YunYan/playwright.config.ts"
+      }
     }
   }
 }

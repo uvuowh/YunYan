@@ -13,7 +13,7 @@ echo "🔧 检查系统要求..."
 if command -v node &> /dev/null; then
     NODE_VERSION=$(node --version)
     echo "✅ Node.js 版本: $NODE_VERSION"
-    
+
     # 检查版本是否 >= 16
     NODE_MAJOR=$(echo $NODE_VERSION | cut -d'.' -f1 | sed 's/v//')
     if [ "$NODE_MAJOR" -ge 16 ]; then
@@ -42,7 +42,7 @@ echo "📁 检查配置文件..."
 # Cursor 配置
 if [ -f ".cursor/mcp.json" ]; then
     echo "✅ Cursor MCP 配置文件存在"
-    
+
     # 验证 JSON 语法
     if command -v jq &> /dev/null; then
         if jq . .cursor/mcp.json > /dev/null 2>&1; then
@@ -69,15 +69,16 @@ echo "🔍 检查 MCP 工具可用性..."
 
 TOOLS=(
     "mcp-feedback-enhanced"
-    "mcp-shrimp-task-manager" 
+    "mcp-shrimp-task-manager"
     "mcp-sequential-thinking"
     "@context7/mcp-server"
     "mcp-brave-search"
+    "mcp-playwright"
 )
 
 for tool in "${TOOLS[@]}"; do
     echo "检查 $tool..."
-    
+
     # 尝试获取工具信息
     if timeout 10s npx --yes "$tool" --version &> /dev/null 2>&1 || \
        timeout 10s npx --yes "$tool" --help &> /dev/null 2>&1; then
@@ -95,7 +96,7 @@ echo "📂 检查数据目录..."
 DATA_DIR="/Users/uvu/YunYan/.shrimp-task-manager/data"
 if [ -d "$DATA_DIR" ]; then
     echo "✅ Shrimp 数据目录存在: $DATA_DIR"
-    
+
     # 检查权限
     if [ -w "$DATA_DIR" ]; then
         echo "✅ 数据目录可写"
